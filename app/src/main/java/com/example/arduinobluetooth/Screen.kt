@@ -2,6 +2,7 @@ package com.example.arduinobluetooth
 
 sealed class Screen(val route:String) {
     object BlueScreen : Screen("blue")
+    object HelpScreen : Screen("help")
     object LoginScreen : Screen("login")
 
 

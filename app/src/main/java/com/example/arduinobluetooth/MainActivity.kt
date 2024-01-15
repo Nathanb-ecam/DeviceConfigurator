@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.arduinobluetooth.data.BluetoothController
+import com.example.arduinobluetooth.data.BottomNavItem
 import com.example.arduinobluetooth.presentation.BluetoothScreen
 import com.example.arduinobluetooth.presentation.BluetoothViewModel
 import com.example.arduinobluetooth.presentation.Navigation
@@ -54,20 +55,33 @@ class MainActivity : ComponentActivity(){
                 val bluetoothController = BluetoothController(applicationContext)
                 val blueViewModel : BluetoothViewModel = viewModel{BluetoothViewModel(bluetoothController)}
 
+
+                val bottomNavItems = listOf(
+                    BottomNavItem(
+                        name="Device list",
+                        route = Screen.BlueScreen.route,
+                        icon_path = R.drawable.ic_launcher_foreground
+                    ),
+                    BottomNavItem(
+                        name="Item's",
+                        route = Screen.HelpScreen.route,
+                        icon_path = R.drawable.ic_launcher_foreground
+                    ),
+                )
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Column {
+
                     /*    Button(onClick = {
 
                             //permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                         }) {
                             Text(text = "Launch permission")
                         }*/
-                        Navigation(navController=navController,bluetoothViewModel = blueViewModel)
+                    Navigation(navController=navController,bluetoothViewModel = blueViewModel,bottomNavItems = bottomNavItems)
 
-                    }
+
 
 
 
