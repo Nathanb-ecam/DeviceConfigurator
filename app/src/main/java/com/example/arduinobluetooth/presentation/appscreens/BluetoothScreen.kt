@@ -1,4 +1,4 @@
-package com.example.arduinobluetooth.presentation
+package com.example.arduinobluetooth.presentation.appscreens
 
 
 import android.annotation.SuppressLint
@@ -13,9 +13,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
@@ -28,21 +28,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.arduinobluetooth.R
+import com.example.arduinobluetooth.Screen
 import com.example.arduinobluetooth.data.BluetoothController
-import com.example.arduinobluetooth.data.MyBluetoothDevice
 import com.example.arduinobluetooth.h2
 import com.example.arduinobluetooth.h3
-import com.example.arduinobluetooth.p
 import com.example.arduinobluetooth.pHint
+import com.example.arduinobluetooth.presentation.BluetoothViewModel
 import com.example.arduinobluetooth.ui.theme.ArduinoBluetoothTheme
 
 
@@ -54,6 +51,7 @@ fun BluetoothScreen(
 ){
     val context = LocalContext.current
     val scannedDevices by blueViewModel.scannedDevices.collectAsState()
+
 
     val buttonDefaults = ButtonDefaults.buttonColors(
         containerColor = Color(context.resources.getColor(R.color.icure_green)),
@@ -98,11 +96,11 @@ fun BluetoothScreen(
             .background(Color(context.resources.getColor(R.color.lightGray)))
         )
         LazyColumn(modifier=Modifier.fillMaxSize()){
-            items(scannedDevices){device->
+            itemsIndexed(scannedDevices){index,device->
                 //if (device.device.address == "C8:C9:A3:E6:64:92"){
                     //blueViewModel.stopScan(context)
 
-                    if (scannedDevices.indexOf(device) != 0) {
+                    if (index != 0) {
                         Divider(
                             color = Color.Gray,
                             thickness = 1.dp,
@@ -123,11 +121,15 @@ fun BluetoothScreen(
 
                         }
                         Button(
-                            onClick = {blueViewModel.connectDevice(context,device.device)},
+                            onClick = {
+                                blueViewModel.stopScan(context = context)
+                                navController.navigate(Screen.DeviceDetailScreen.withArgs(device.device.address))
+                                //blueViewModel.connectDevice(context,device.device)
+                                      },
                             colors = buttonDefaults,
                             modifier = Modifier.fillMaxHeight().align(Alignment.CenterVertically)
                         ){
-                            Text(text="Configure")
+                            Text(text="Details")
                         }
                     }
                //}
@@ -148,7 +150,7 @@ fun BluetoothPreview() {
     val navController = rememberNavController()
 
     val bluetoothController = BluetoothController(context)
-    val blueViewModel  = viewModel{BluetoothViewModel(bluetoothController)}
+    val blueViewModel  = viewModel{ BluetoothViewModel(bluetoothController) }
     ArduinoBluetoothTheme {
 
         BluetoothScreen(navController = navController,blueViewModel)

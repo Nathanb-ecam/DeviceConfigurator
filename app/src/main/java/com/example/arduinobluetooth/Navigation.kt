@@ -2,21 +2,17 @@ package com.example.arduinobluetooth.presentation
 
 
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 
 import androidx.compose.material.*
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ExperimentalGraphicsApi
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavArgument
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -27,8 +23,10 @@ import androidx.navigation.navArgument
 import com.example.arduinobluetooth.R
 import com.example.arduinobluetooth.Screen
 import com.example.arduinobluetooth.data.BottomNavItem
-import com.example.arduinobluetooth.presentation.BluetoothScreen
-import com.example.arduinobluetooth.presentation.BluetoothViewModel
+import com.example.arduinobluetooth.presentation.appscreens.BluetoothScreen
+import com.example.arduinobluetooth.presentation.appscreens.DeviceDetailScreen
+import com.example.arduinobluetooth.presentation.appscreens.HelpScreen
+import com.example.arduinobluetooth.presentation.appscreens.LoginScreen
 
 
 @Composable
@@ -42,14 +40,26 @@ fun Navigation(navController : NavHostController, bluetoothViewModel: BluetoothV
             ScreenScaffolder(navController = navController, bottomNavItems = bottomNavItems) {
                 BluetoothScreen(navController = navController, blueViewModel = bluetoothViewModel)
             }
-
+        }
+        composable(
+            route = Screen.DeviceDetailScreen.route+"/{deviceAddress}",
+            arguments = listOf(
+                navArgument("deviceAddress"){
+                    type = NavType.StringType
+                    defaultValue = "Not found"
+                },
+            )
+        ) {
+            val deviceAddress = it.arguments?.getString("deviceAddress")
+            ScreenScaffolder(navController = navController, bottomNavItems = bottomNavItems) {
+                DeviceDetailScreen(navController = navController,blueViewModel = bluetoothViewModel, deviceAddress = deviceAddress)
+            }
         }
 
         composable(route = Screen.HelpScreen.route) {
             ScreenScaffolder(navController = navController, bottomNavItems = bottomNavItems) {
                 HelpScreen(navController = navController)
             }
-
         }
 
 

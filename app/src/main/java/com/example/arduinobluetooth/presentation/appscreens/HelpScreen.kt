@@ -1,4 +1,4 @@
-package com.example.arduinobluetooth.presentation
+package com.example.arduinobluetooth.presentation.appscreens
 
 
 import android.util.Log

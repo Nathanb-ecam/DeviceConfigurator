@@ -8,6 +8,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 
+val h1 = TextStyle(
+    fontFamily = FontFamily.Default,
+    fontWeight = FontWeight.Bold,
+    fontStyle = FontStyle.Normal,
+    fontSize = 24.sp,
+    textAlign = TextAlign.Center
+)
+
 val h2 = TextStyle(
     fontFamily = FontFamily.Default,
     fontWeight = FontWeight.Bold,
@@ -15,6 +23,7 @@ val h2 = TextStyle(
     fontSize = 20.sp,
     textAlign = TextAlign.Center
 )
+
 
 
 val h3 = TextStyle(

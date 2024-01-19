@@ -1,31 +1,20 @@
 package com.example.arduinobluetooth
 
 
-import android.Manifest
 import android.os.Bundle
-import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.R
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.arduinobluetooth.data.BluetoothController
 import com.example.arduinobluetooth.data.BottomNavItem
-import com.example.arduinobluetooth.presentation.BluetoothScreen
 import com.example.arduinobluetooth.presentation.BluetoothViewModel
 import com.example.arduinobluetooth.presentation.Navigation
 import com.example.arduinobluetooth.ui.theme.ArduinoBluetoothTheme

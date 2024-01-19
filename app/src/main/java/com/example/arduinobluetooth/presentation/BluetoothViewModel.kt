@@ -49,6 +49,11 @@ class BluetoothViewModel (
         }.launchIn(viewModelScope)
     }
 
+
+    fun getDeviceByAddress(address : String) : MyBluetoothDevice?{
+        return _scannedDevices.value.firstOrNull{it.device.address == address}
+    }
+
     fun startScan(context: Context) {
         bluetoothController.scanLeDevice(context)
     }
@@ -65,7 +70,6 @@ class BluetoothViewModel (
 
 
     fun connectDevice(context: Context,device : BluetoothDevice){
-        bluetoothController.stopScanLeDevice(context = context)
         bluetoothController.connectDevice(device)
     }
 
