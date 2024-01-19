@@ -6,6 +6,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -26,11 +28,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.arduinobluetooth.R
 import com.example.arduinobluetooth.Screen
+import com.example.arduinobluetooth.data.BluetoothController
+import com.example.arduinobluetooth.data.BottomNavItem
+import com.example.arduinobluetooth.ui.theme.ArduinoBluetoothTheme
 
 
 @OptIn(ExperimentalGraphicsApi::class)
@@ -42,13 +49,13 @@ fun LoginScreen(navController: NavController){
     val context = LocalContext.current
 
 
-/*    val textFieldColors = TextFieldDefaults.outlinedTextFieldColors(
-        leadingIconColor = Color(context.resources.getColor(R.color.red)),
-        focusedBorderColor = Color(context.resources.getColor(R.color.red)),
-        unfocusedBorderColor = Color(context.resources.getColor(R.color.red)),
-        cursorColor = Color(context.resources.getColor(R.color.red)),
-        focusedLabelColor =Color(context.resources.getColor(R.color.red)),
-    )*/
+    val textFieldColors = androidx.compose.material.TextFieldDefaults.outlinedTextFieldColors(
+        leadingIconColor = Color(context.resources.getColor(R.color.icure_green)),
+        focusedBorderColor = Color(context.resources.getColor(R.color.icure_green)),
+        unfocusedBorderColor = Color(context.resources.getColor(R.color.icure_green)),
+        cursorColor = Color(context.resources.getColor(R.color.icure_green)),
+        focusedLabelColor =Color(context.resources.getColor(R.color.icure_green)),
+    )
 
 
     var username by rememberSaveable() { mutableStateOf("") }
@@ -70,21 +77,26 @@ fun LoginScreen(navController: NavController){
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ){
-
-        Card(
-            modifier = Modifier
-                .fillMaxWidth().
-                padding(18.dp),
-        ){
             Column(modifier = Modifier
                 .fillMaxWidth()
+                .background(Color(context.resources.getColor(R.color.icure_white)))
                 .padding(16.dp)){
+                
+                
+                Image(
+                    painter = painterResource(R.drawable.icure_logo),
+                    contentDescription ="icure logo",
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+
+
                 OutlinedTextField(
                     value = username,
                     onValueChange = { username=it },
                     label = {Text("Nom d'utilisateur")},
                     textStyle = LocalTextStyle.current.copy(color = Color.Gray),
-                    //colors = textFieldColors,
+                    colors = textFieldColors,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(2.dp),
@@ -97,7 +109,7 @@ fun LoginScreen(navController: NavController){
                     onValueChange = { password=it },
                     label = {Text("Mot de passe")},
                     textStyle = LocalTextStyle.current.copy(color = Color.Gray),
-                    //colors = textFieldColors,
+                    colors = textFieldColors,
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -111,7 +123,7 @@ fun LoginScreen(navController: NavController){
                         .align(alignment = Alignment.CenterHorizontally)
                         .fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(
-                        //backgroundColor = Color(context.resources.getColor(R.color.red)),
+                        containerColor = Color(context.resources.getColor(R.color.icure_green)),
                         contentColor = Color.White
                     ),
                     onClick = {
@@ -125,7 +137,20 @@ fun LoginScreen(navController: NavController){
             }
 
 
-        }
-    }
 
+    }
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun LoginPreview() {
+
+    ArduinoBluetoothTheme {
+        val navController = rememberNavController()
+
+        LoginScreen(navController = navController)
+
+
+    }
 }

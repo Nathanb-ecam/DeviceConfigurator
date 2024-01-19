@@ -2,8 +2,12 @@ package com.example.arduinobluetooth.presentation
 
 
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+
 import androidx.compose.material.*
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -90,13 +94,14 @@ fun ScreenScaffolder(
         },*/
         bottomBar = {
             BottomNavigationBar(
+                modifier = Modifier
+                    .fillMaxHeight(0.1f),
                 items = bottomNavItems,
                 navController = navController ,
                 onItemClicked ={navController.navigate(it.route)}
             )
         }
     ) { innerPadding ->
-        // Content of the screen goes here
         content(innerPadding)
     }
 }
@@ -115,7 +120,7 @@ fun BottomNavigationBar(
     if (backStackEntry.value?.destination?.route !=Screen.LoginScreen.route){
         BottomNavigation(
             modifier = Modifier,
-            backgroundColor = Color.DarkGray,
+            backgroundColor = Color(context.resources.getColor(R.color.icure_black)),
             elevation = 5.dp
         ){
             items.forEach{item->
@@ -123,13 +128,10 @@ fun BottomNavigationBar(
                 BottomNavigationItem(
                     selected = selected,
                     onClick = { onItemClicked(item) },
-                    selectedContentColor = Color(context.resources.getColor(R.color.black)),
-                    unselectedContentColor = Color.Gray,
+                    selectedContentColor = Color(context.resources.getColor(R.color.icure_green)),
+                    unselectedContentColor = Color(context.resources.getColor(R.color.icure_white)),
                     icon = {
-                        Icon(
-                            painter = painterResource(id = item.icon_path),
-                            contentDescription = item.name
-                        )
+                        Icon(imageVector = item.icon, contentDescription =item.name )
                     }
                 )
             }

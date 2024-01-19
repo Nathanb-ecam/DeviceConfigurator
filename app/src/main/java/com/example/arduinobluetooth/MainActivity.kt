@@ -8,9 +8,19 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.R
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.arduinobluetooth.data.BluetoothController
@@ -19,86 +29,56 @@ import com.example.arduinobluetooth.presentation.BluetoothScreen
 import com.example.arduinobluetooth.presentation.BluetoothViewModel
 import com.example.arduinobluetooth.presentation.Navigation
 import com.example.arduinobluetooth.ui.theme.ArduinoBluetoothTheme
-
+import com.example.arduinobluetooth.utils.BLEPermissions
 
 
 class MainActivity : ComponentActivity(){
-
-    private val permissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
-        if (isGranted) {
-            // Permission granted
-            // Your logic here
-            Log.i("BTH","")
-        } else {
-            // Permission denied
-            // Handle accordingly
-            Log.i("BTH","Missing permission")
-            Toast.makeText(applicationContext,"The app needs permissions",Toast.LENGTH_SHORT)
-        }
-    }
-
-
+    private lateinit var blePermissions: BLEPermissions
+    private lateinit var bluetoothController : BluetoothController
+    private lateinit var blueViewModel : BluetoothViewModel
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        blePermissions = BLEPermissions(this)
+        blePermissions.requestPermissions()
 
-        permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+
 
 
         setContent {
             ArduinoBluetoothTheme {
                 val navController = rememberNavController()
-                val bluetoothController = BluetoothController(applicationContext)
-                val blueViewModel : BluetoothViewModel = viewModel{BluetoothViewModel(bluetoothController)}
+                bluetoothController = BluetoothController(applicationContext)
+                blueViewModel  = viewModel{BluetoothViewModel(bluetoothController)}
 
 
                 val bottomNavItems = listOf(
                     BottomNavItem(
                         name="Device list",
                         route = Screen.BlueScreen.route,
-                        icon_path = R.drawable.ic_launcher_foreground
+                        icon = Icons.Default.Search
                     ),
                     BottomNavItem(
                         name="Item's",
                         route = Screen.HelpScreen.route,
-                        icon_path = R.drawable.ic_launcher_foreground
+                        icon = Icons.Default.Settings
                     ),
                 )
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    //color = MaterialTheme.colorScheme.background
+                    color= Color(applicationContext.resources.getColor(com.example.arduinobluetooth.R.color.icure_white))
                 ) {
-
-                    /*    Button(onClick = {
-
-                            //permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-                        }) {
-                            Text(text = "Launch permission")
-                        }*/
                     Navigation(navController=navController,bluetoothViewModel = blueViewModel,bottomNavItems = bottomNavItems)
-
-
-
-
-
-
                 }
             }
         }
     }
-
-
-
-
-
-
-
-
 }
+
+
 
 
 

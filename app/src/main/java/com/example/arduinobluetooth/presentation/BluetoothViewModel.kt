@@ -2,10 +2,12 @@ package com.example.arduinobluetooth.presentation
 
 import android.bluetooth.BluetoothDevice
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.arduinobluetooth.data.BluetoothController
+import com.example.arduinobluetooth.data.MyBluetoothDevice
 
 
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,22 +34,17 @@ class BluetoothViewModel (
     private val bluetoothController: BluetoothController
 ): ViewModel() {
 
-    private val _scannedDevices = MutableStateFlow<List<BluetoothDevice>>(emptyList())
+    private val _scannedDevices = MutableStateFlow<List<MyBluetoothDevice>>(emptyList())
 
-    // Public StateFlow that external components can observe
-    val scannedDevices: StateFlow<List<BluetoothDevice>> get() = _scannedDevices.asStateFlow()
+    val scannedDevices: StateFlow<List<MyBluetoothDevice>> get() = _scannedDevices.asStateFlow()
 
     init {
         // Observe the scannedDevicesFlow from the BluetoothController
-        bluetoothController.scannedDevices.map { devices ->
-            // You can perform any additional transformations here if needed
-            devices
-        }.stateIn(
+        bluetoothController.scannedDevices.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(3000),
             emptyList() // Initial value for the StateFlow
         ).onEach { updatedDevicesList ->
-            // Update the private mutable state flow with the new list
             _scannedDevices.value = updatedDevicesList
         }.launchIn(viewModelScope)
     }
@@ -60,13 +57,16 @@ class BluetoothViewModel (
         bluetoothController.stopScanLeDevice(context)
     }
 
-    fun deleteSearchResults(){
+    fun deleteSearchResults(context:Context){
+        bluetoothController.stopScanLeDevice(context = context)
+        bluetoothController.disconnectDevice()
         bluetoothController.deleteSearchResults()
     }
 
 
-    fun connectDevice(device : BluetoothDevice){
-        bluetoothController.deviceFound(device)
+    fun connectDevice(context: Context,device : BluetoothDevice){
+        bluetoothController.stopScanLeDevice(context = context)
+        bluetoothController.connectDevice(device)
     }
 
 
