@@ -129,7 +129,7 @@ fun BluetoothScreen(
                             colors = buttonDefaults,
                             modifier = Modifier.fillMaxHeight().align(Alignment.CenterVertically)
                         ){
-                            Text(text="Details")
+                            Text(text="Connect")
                         }
                     }
                //}

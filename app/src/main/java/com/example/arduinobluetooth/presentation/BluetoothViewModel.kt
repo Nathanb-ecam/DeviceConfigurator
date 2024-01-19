@@ -1,9 +1,9 @@
 package com.example.arduinobluetooth.presentation
 
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothGatt
 import android.content.Context
-import android.util.Log
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.arduinobluetooth.data.BluetoothController
@@ -14,20 +14,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 
-import kotlin.text.Typography.dagger
-
-
-
-class BluetoothUiState(
-    val scannedDevices: List<BluetoothDevice> = emptyList()
-
-)
 
 
 class BluetoothViewModel (
@@ -38,6 +28,9 @@ class BluetoothViewModel (
 
     val scannedDevices: StateFlow<List<MyBluetoothDevice>> get() = _scannedDevices.asStateFlow()
 
+    private val _isConnected = MutableStateFlow<Boolean>(false)
+    val isConnected : StateFlow<Boolean> = bluetoothController.isConnected.stateIn(viewModelScope, SharingStarted.WhileSubscribed(),false)
+
     init {
         // Observe the scannedDevicesFlow from the BluetoothController
         bluetoothController.scannedDevices.stateIn(
@@ -47,7 +40,10 @@ class BluetoothViewModel (
         ).onEach { updatedDevicesList ->
             _scannedDevices.value = updatedDevicesList
         }.launchIn(viewModelScope)
+
+
     }
+
 
 
     fun getDeviceByAddress(address : String) : MyBluetoothDevice?{
@@ -71,6 +67,15 @@ class BluetoothViewModel (
 
     fun connectDevice(context: Context,device : BluetoothDevice){
         bluetoothController.connectDevice(device)
+    }
+
+
+    fun testDeviceConnection(){
+        bluetoothController.testDeviceConnection()
+    }
+
+    fun configureArduinoDevice(){
+        bluetoothController.configureArduinoDevice()
     }
 
 

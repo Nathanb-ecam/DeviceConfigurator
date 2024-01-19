@@ -12,6 +12,7 @@ import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
+import android.os.Message
 import android.util.Log
 import android.widget.Toast
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +23,11 @@ import java.util.UUID
 class BluetoothController(private val context : Context) {
     private val bluetoothManager = context.getSystemService(BluetoothManager::class.java)
     private val adapter = bluetoothManager.adapter
+
     private var connectedGatt:BluetoothGatt? = null
+    private val _isConnected = MutableStateFlow<Boolean>(false)
+    val isConnected : StateFlow<Boolean> get() = _isConnected
+
     private val handler = Handler(Looper.getMainLooper())
 
     private val _scannedDevices = MutableStateFlow<List<MyBluetoothDevice>>(emptyList())
@@ -31,6 +36,12 @@ class BluetoothController(private val context : Context) {
     private var devRealTimeRssi = mutableListOf<MyBluetoothDevice>() // to contain address and RSSI value
 
     private var updateScannedDevicesRunnable: Runnable? = null
+
+    private val serviceUuid = UUID.fromString("b1be5923-8ca2-415c-9f20-69023f8b4c33")
+    private val testUuid = UUID.fromString("8bbc0c8b-d41b-4fd3-8854-af19317d62a1")
+    private val senderUuid = UUID.fromString("3dbd6a55-fcc7-4cd8-811f-2c5754296a0a")
+    private val encryptKeyUuid = UUID.fromString("7626adb2-28ab-4327-8ead-bb571cb1d7f0")
+    private val configStatusUuid = UUID.fromString("5fae4e14-ca8f-41d7-bd5b-c3a0498973ae")
 
     //private val SCAN_PERIOD :Long = 1000;
 
@@ -148,6 +159,78 @@ class BluetoothController(private val context : Context) {
 
 
     @SuppressLint("MissingPermission")
+    // toggle arduino builtin Led to ensure we are communicating with the right device
+    fun testDeviceConnection() {
+        connectedGatt?.let { gatt ->
+
+            val arduinoService = gatt.getService(serviceUuid)
+            val testCharacteristic = arduinoService?.getCharacteristic(testUuid)
+
+            if (testCharacteristic != null) {
+                val message = "device connection test".toByteArray(Charsets.UTF_8)
+                testCharacteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+                testCharacteristic.setValue(message)
+                gatt.writeCharacteristic(testCharacteristic)
+            }
+        }
+    }
+
+
+    @SuppressLint("MissingPermission")
+    fun configureArduinoDevice(){
+        connectedGatt?.let { gatt ->
+
+            val arduinoService = gatt.getService(serviceUuid)
+            val senderCharacteristic = arduinoService?.getCharacteristic(senderUuid)
+            val keyCharacteristic = arduinoService?.getCharacteristic(encryptKeyUuid)
+            val statusCharacteristic = arduinoService?.getCharacteristic(configStatusUuid)
+
+            Handler(Looper.getMainLooper()).postDelayed({
+                val CCCD_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
+                val descriptor = statusCharacteristic?.getDescriptor(CCCD_UUID)
+
+                if (descriptor != null) {
+                    descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                    gatt.setCharacteristicNotification(statusCharacteristic, true)
+                    gatt.writeDescriptor(descriptor)
+                    Log.i("GATT", "Getting better")
+                } else {
+                    Log.e("Bluetooth", "Descriptor not found for CCCD UUID")
+                }
+            }, 100)
+
+
+            if (senderCharacteristic!=null){
+                Handler(Looper.getMainLooper()).postDelayed({
+                    writeToCharacteristic(senderCharacteristic,gatt,"Jean-jacques")
+                    Log.i("GATT", "Setting send name characteristic")
+                }, 300)
+            }
+
+            if (keyCharacteristic != null) {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    Log.i("GATT", "Setting encryption key characteristic")
+                    writeToCharacteristic(keyCharacteristic,gatt,"a241bAZEERTRTY123")
+                }, 400)
+            }
+
+
+
+        }
+    }
+
+
+    @SuppressLint("MissingPermission")
+    fun writeToCharacteristic(characteristic: BluetoothGattCharacteristic, gatt: BluetoothGatt,message: String){
+        if (characteristic != null) {
+            val msg = message.toByteArray(Charsets.UTF_8)
+            characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+            characteristic.setValue(msg)
+            gatt.writeCharacteristic(characteristic)
+        }
+    }
+
+    @SuppressLint("MissingPermission")
     fun connectDevice(device : BluetoothDevice){
         try {
             device.connectGatt(context,false,gattCallback)
@@ -156,6 +239,7 @@ class BluetoothController(private val context : Context) {
             Log.i("GATT", e.toString())
         }
     }
+
 
     @SuppressLint("MissingPermission")
     fun disconnectDevice(){
@@ -176,11 +260,13 @@ class BluetoothController(private val context : Context) {
             if (newState == BluetoothGatt .STATE_CONNECTED){
                 gatt?.requestMtu(256)
                 connectedGatt = gatt
+                _isConnected.value = true
                 Handler(Looper.getMainLooper()).postDelayed({
                     gatt?.discoverServices()
                 }, 2000)
             }else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
                 connectedGatt = null
+                _isConnected.value = false
             }
         }
 
@@ -188,53 +274,6 @@ class BluetoothController(private val context : Context) {
         override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
             super.onServicesDiscovered(gatt, status)
             Log.i("GATT","Service discovered")
-
-            val serviceUuid = UUID.fromString("b1be5923-8ca2-415c-9f20-69023f8b4c33")
-            val senderUuid = UUID.fromString("3dbd6a55-fcc7-4cd8-811f-2c5754296a0a")
-            val encryptKeyUuid = UUID.fromString("7626adb2-28ab-4327-8ead-bb571cb1d7f0")
-            val configStatusUuid = UUID.fromString("5fae4e14-ca8f-41d7-bd5b-c3a0498973ae")
-
-
-            val arduinoService =   gatt?.getService(serviceUuid)
-            val senderCharacteristic = arduinoService?.getCharacteristic(senderUuid)
-            val keyCharacteristic = arduinoService?.getCharacteristic(encryptKeyUuid)
-            val statusCharacteristic = arduinoService?.getCharacteristic(configStatusUuid)
-
-
-
-            Handler(Looper.getMainLooper()).postDelayed({
-                val CCCD_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
-                val descriptor = statusCharacteristic?.getDescriptor(CCCD_UUID)
-
-                if (descriptor != null) {
-                    descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-                    gatt.setCharacteristicNotification(statusCharacteristic, true)
-                    gatt.writeDescriptor(descriptor)
-                    Log.i("GATT", "Getting better")
-                } else {
-                    Log.e("Bluetooth", "Descriptor not found for CCCD UUID")
-                }
-            }, 100)
-
-
-            if (senderCharacteristic != null) {
-                Handler(Looper.getMainLooper()).postDelayed({
-                    Log.i("GATT", "Setting send name characteristic")
-                    senderCharacteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-                    senderCharacteristic.setValue("Jean-jacques".toByteArray(Charsets.UTF_8))
-                    //characteristic.value = byteArrayOf(1)
-                    gatt.writeCharacteristic(senderCharacteristic)
-                }, 1500) // Adjust the delay as needed
-            }
-
-            if (keyCharacteristic != null) {
-                Log.i("GATT", "Setting encryption key characteristic")
-                Handler(Looper.getMainLooper()).postDelayed({
-                    keyCharacteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-                    keyCharacteristic.setValue("a241bAZEERTRTY123".toByteArray(Charsets.UTF_8))
-                    gatt.writeCharacteristic(keyCharacteristic)
-                }, 1600) // Adjust the delay as needed
-            }
 
         }
 

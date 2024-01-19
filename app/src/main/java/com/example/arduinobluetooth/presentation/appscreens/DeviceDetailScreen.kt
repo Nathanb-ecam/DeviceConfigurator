@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.arduinobluetooth.R
@@ -26,6 +27,8 @@ import com.example.arduinobluetooth.h3
 import com.example.arduinobluetooth.p
 import com.example.arduinobluetooth.pHint
 import com.example.arduinobluetooth.presentation.BluetoothViewModel
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 
 
 @SuppressLint("MissingPermission")
@@ -40,6 +43,8 @@ fun DeviceDetailScreen(
 
     Log.i("RECEIVED",deviceAddress!!)
     val device = blueViewModel.getDeviceByAddress(deviceAddress)
+
+    val isConnected by blueViewModel.isConnected.collectAsState()
 
 
     val buttonDefaults = ButtonDefaults.buttonColors(
@@ -57,24 +62,44 @@ fun DeviceDetailScreen(
 
     ) {
         if (device != null) {
+            blueViewModel.connectDevice(context,device.device)
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.White)
+                    .fillMaxHeight(0.5f)
                     .padding(16.dp)
             ) {
                 Column(
+                    verticalArrangement = Arrangement.SpaceEvenly,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
                 ) {
                     val deviceName =device.device.name ?: "No Name"
 
-                    Text(text = "Device : ${deviceName}",style = h1)
+                    Row(horizontalArrangement = Arrangement.SpaceBetween){
+                        Text(text = "Device : ${deviceName}",style = h1)
+                        Text(text=isConnected.toString())
+
+                    }
+
                     Text(text = deviceAddress,style=h3)
+
                     Button(
                         onClick = {
-                            blueViewModel.connectDevice(context, device.device)
+                            blueViewModel.testDeviceConnection()
+                        },
+                        colors = buttonDefaults,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                    ) {
+                        Text(text = "Toggle builtin led")
+                    }
+                    Button(
+                        onClick = {
+                            blueViewModel.configureArduinoDevice()
                         },
                         colors = buttonDefaults,
                         modifier = Modifier
