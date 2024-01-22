@@ -16,14 +16,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.TextField
+import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -51,6 +59,7 @@ fun BluetoothScreen(
 ){
     val context = LocalContext.current
     val scannedDevices by blueViewModel.scannedDevices.collectAsState()
+    val searchText by blueViewModel.searchText.collectAsState()
 
 
     val buttonDefaults = ButtonDefaults.buttonColors(
@@ -58,10 +67,20 @@ fun BluetoothScreen(
         contentColor = Color.White
     )
 
-    val outlinedButtonDefaults = ButtonDefaults.buttonColors(
-        containerColor = Color(context.resources.getColor(R.color.icure_white)),
-        contentColor = Color(context.resources.getColor(R.color.icure_black)),
+
+    val textFieldColors = TextFieldDefaults.textFieldColors(
+        focusedIndicatorColor = Color(context.resources.getColor(R.color.icure_green)),
+        cursorColor = Color(context.resources.getColor(R.color.icure_green)),
+        focusedLabelColor = Color(context.resources.getColor(R.color.icure_green)),
+        leadingIconColor = Color(context.resources.getColor(R.color.icure_green)),
     )
+
+    if(searchText.isEmpty()){
+        blueViewModel.startScan(context = context)
+    }
+    else{
+        blueViewModel.stopScan(context = context)
+    }
 
     Column(
         modifier = Modifier
@@ -71,25 +90,16 @@ fun BluetoothScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceAround
     ){
-        Row(){
-            OutlinedButton(
-                onClick = { blueViewModel.startScan(context = context)},
-                colors = outlinedButtonDefaults,
-                border = ButtonDefaults.outlinedButtonBorder.copy(
-                    width = 0.dp
-                )
-            ) {
-                Text(text="Search for devices")
 
-            }
+        TextField(
+            value = searchText,
+            onValueChange = blueViewModel::onSearchTextChange,
+            label = { Text("Rechercher") },
+            colors = textFieldColors,
+            modifier = Modifier.padding(8.dp)
+        )
 
-            Button(
-                onClick = {blueViewModel.deleteSearchResults(context = context)},
-                colors = buttonDefaults
-            ){
-                Text(text = "Clear")
-            }
-        }
+
         Spacer(modifier = Modifier
             .fillMaxWidth()
             .height(2.dp)
@@ -109,13 +119,19 @@ fun BluetoothScreen(
                                 .padding(horizontal = 12.dp, vertical = 4.dp)
                         )
                     }
-                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)){
+                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 4.dp)){
                         Text(
                             text = device.rssi.toString().substring(1),
                             style = h2, color = Color(context.resources.getColor(R.color.icure_green)),
-                            modifier = Modifier.fillMaxHeight().align(Alignment.CenterVertically)
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .align(Alignment.CenterVertically)
                             )
-                        Column (modifier = Modifier.fillMaxHeight().align(Alignment.CenterVertically)){
+                        Column (modifier = Modifier
+                            .fillMaxHeight()
+                            .align(Alignment.CenterVertically)){
                             Text(text = device.device.name?:"No name",style = h3,color = Color(context.resources.getColor(R.color.icure_black)))
                             Text(text = device.device.address?:"No adress", style = pHint,color = Color(context.resources.getColor(R.color.icure_black)))
 
@@ -127,7 +143,9 @@ fun BluetoothScreen(
                                 //blueViewModel.connectDevice(context,device.device)
                                       },
                             colors = buttonDefaults,
-                            modifier = Modifier.fillMaxHeight().align(Alignment.CenterVertically)
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .align(Alignment.CenterVertically)
                         ){
                             Text(text="Connect")
                         }
@@ -139,6 +157,7 @@ fun BluetoothScreen(
 
     }
 }
+
 
 
 
@@ -154,7 +173,6 @@ fun BluetoothPreview() {
     ArduinoBluetoothTheme {
 
         BluetoothScreen(navController = navController,blueViewModel)
-
 
     }
 }

@@ -76,10 +76,7 @@ class BluetoothController(private val context : Context) {
 
         try{
             adapter.bluetoothLeScanner.stopScan(leScanCallback)
-            Log.i("After scan", _scannedDevices.value.size.toString())
-            for(dev in _scannedDevices.value){
-                Log.i("After scan","MAC : ${dev.device.address}")
-            }
+            Log.i("After scan", " Found ${_scannedDevices.value.size.toString()} devices")
 
         }
         catch(e:Exception){
