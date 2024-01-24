@@ -78,7 +78,7 @@ class BluetoothViewModel (
 
 
 
-    fun getDeviceByAddress(address : String) : MyBluetoothDevice?{
+    fun getDeviceByAddress(address : String?) : MyBluetoothDevice?{
         return _scannedDevices.value.firstOrNull{it.device.address == address}
     }
 

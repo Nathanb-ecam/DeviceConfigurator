@@ -41,7 +41,8 @@ fun DeviceDetailScreen(
 
     val context = LocalContext.current
 
-    Log.i("RECEIVED",deviceAddress!!)
+    //Log.i("RECEIVED",deviceAddress!!)
+
     val device = blueViewModel.getDeviceByAddress(deviceAddress)
 
     val isConnected by blueViewModel.isConnected.collectAsState()
@@ -84,7 +85,10 @@ fun DeviceDetailScreen(
 
                     }
 
-                    Text(text = deviceAddress,style=h3)
+                    if(deviceAddress!= null){
+                        Text(text = deviceAddress,style=h3)
+                    }
+
 
                     Button(
                         onClick = {

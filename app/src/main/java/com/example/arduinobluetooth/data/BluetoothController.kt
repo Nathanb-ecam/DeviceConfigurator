@@ -18,8 +18,12 @@ import android.widget.Toast
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.nio.ByteBuffer
 import java.util.UUID
+import com.example.arduinobluetooth.utils.Crypto
 
+
+@SuppressLint("MissingPermission")
 class BluetoothController(private val context : Context) {
     private val bluetoothManager = context.getSystemService(BluetoothManager::class.java)
     private val adapter = bluetoothManager.adapter
@@ -40,14 +44,17 @@ class BluetoothController(private val context : Context) {
     private val serviceUuid = UUID.fromString("b1be5923-8ca2-415c-9f20-69023f8b4c33")
     private val testUuid = UUID.fromString("8bbc0c8b-d41b-4fd3-8854-af19317d62a1")
     private val senderUuid = UUID.fromString("3dbd6a55-fcc7-4cd8-811f-2c5754296a0a")
+    private val senderTokenUuid = UUID.fromString("0fd7161a-c2e2-44cb-a5ee-9dd3187424fc")
     private val encryptKeyUuid = UUID.fromString("7626adb2-28ab-4327-8ead-bb571cb1d7f0")
     private val configStatusUuid = UUID.fromString("5fae4e14-ca8f-41d7-bd5b-c3a0498973ae")
+
+
+    private val cryptoUtils  = Crypto()
 
     //private val SCAN_PERIOD :Long = 1000;
 
 
 
-    @SuppressLint("MissingPermission")
     fun scanLeDevice(context: Context,){
             if(!adapter.isEnabled){
                 Log.i("BTH","Bluetooth not enabled")
@@ -67,7 +74,7 @@ class BluetoothController(private val context : Context) {
             }
     }
 
-    @SuppressLint("MissingPermission")
+
     fun stopScanLeDevice(context: Context){
         if(!adapter.isEnabled){
             Log.i("BTH","Bluetooth not enabled")
@@ -130,7 +137,6 @@ class BluetoothController(private val context : Context) {
     }
 
     private val leScanCallback: ScanCallback = object : ScanCallback() {
-        @SuppressLint("MissingPermission")
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             super.onScanResult(callbackType, result)
             val device = result.device
@@ -155,7 +161,7 @@ class BluetoothController(private val context : Context) {
     }
 
 
-    @SuppressLint("MissingPermission")
+
     // toggle arduino builtin Led to ensure we are communicating with the right device
     fun testDeviceConnection() {
         connectedGatt?.let { gatt ->
@@ -173,14 +179,17 @@ class BluetoothController(private val context : Context) {
     }
 
 
-    @SuppressLint("MissingPermission")
+
     fun configureArduinoDevice(){
         connectedGatt?.let { gatt ->
 
             val arduinoService = gatt.getService(serviceUuid)
-            val senderCharacteristic = arduinoService?.getCharacteristic(senderUuid)
-            val keyCharacteristic = arduinoService?.getCharacteristic(encryptKeyUuid)
+            val senderIdCharacteristic = arduinoService?.getCharacteristic(senderUuid)
+            val senderTokenCharacteristic = arduinoService?.getCharacteristic(senderTokenUuid)
+            val senderKeyCharacteristic = arduinoService?.getCharacteristic(encryptKeyUuid)
             val statusCharacteristic = arduinoService?.getCharacteristic(configStatusUuid)
+
+
 
             Handler(Looper.getMainLooper()).postDelayed({
                 val CCCD_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
@@ -197,18 +206,35 @@ class BluetoothController(private val context : Context) {
             }, 100)
 
 
-            if (senderCharacteristic!=null){
+            if (senderIdCharacteristic!=null){
                 Handler(Looper.getMainLooper()).postDelayed({
-                    writeToCharacteristic(senderCharacteristic,gatt,"Jean-jacques")
+                    val senderUuid  = UUID.fromString("219628ad-1441-4b15-9fbb-406b8f220779")
+                    val byteArray = cryptoUtils.uuid128ToByteArray(senderUuid)
+                    writeToCharacteristic(senderIdCharacteristic,gatt,byteArray)
                     Log.i("GATT", "Setting send name characteristic")
+                }, 200)
+            }
+
+            if (senderTokenCharacteristic != null) {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    val senderToken  = UUID.fromString("6fc6ee94-c981-47c8-ba23-1d9d70bdcea9")
+                    val byteArray = cryptoUtils.uuid128ToByteArray(senderToken)
+                    Log.i("GATT", "Setting sender token characteristic")
+                    writeToCharacteristic(senderTokenCharacteristic,gatt,byteArray)
                 }, 300)
             }
 
-            if (keyCharacteristic != null) {
+            if (senderKeyCharacteristic != null) {
                 Handler(Looper.getMainLooper()).postDelayed({
-                    Log.i("GATT", "Setting encryption key characteristic")
-                    writeToCharacteristic(keyCharacteristic,gatt,"a241bAZEERTRTY123")
-                }, 400)
+                    val uuid256 = cryptoUtils.generateAES256()
+
+                    if(uuid256!= null){
+                        val byteArray = cryptoUtils.keyToByteArray(uuid256)
+                        //Log.i("ENCRYPTION KEY",byteArray.toHexString())
+                        Log.i("GATT", "Setting encryption key characteristic")
+                        writeToCharacteristic(senderKeyCharacteristic,gatt,byteArray)
+                    }
+                }, 800)
             }
 
 
@@ -216,18 +242,17 @@ class BluetoothController(private val context : Context) {
         }
     }
 
-
-    @SuppressLint("MissingPermission")
-    fun writeToCharacteristic(characteristic: BluetoothGattCharacteristic, gatt: BluetoothGatt,message: String){
-        if (characteristic != null) {
-            val msg = message.toByteArray(Charsets.UTF_8)
-            characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-            characteristic.setValue(msg)
-            gatt.writeCharacteristic(characteristic)
-        }
+    fun ByteArray.toHexString(): String {
+        return joinToString(separator = "") { byte -> "%02X".format(byte) }
     }
 
-    @SuppressLint("MissingPermission")
+    fun writeToCharacteristic(characteristic: BluetoothGattCharacteristic, gatt: BluetoothGatt,byteArray: ByteArray){ //message: String
+        characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+        characteristic.setValue(byteArray)
+        gatt.writeCharacteristic(characteristic)
+    }
+
+
     fun connectDevice(device : BluetoothDevice){
         try {
             device.connectGatt(context,false,gattCallback)
@@ -238,7 +263,7 @@ class BluetoothController(private val context : Context) {
     }
 
 
-    @SuppressLint("MissingPermission")
+
     fun disconnectDevice(){
         connectedGatt?.let{gatt->
             try{
@@ -251,7 +276,7 @@ class BluetoothController(private val context : Context) {
 
 
     private val gattCallback = object : BluetoothGattCallback(){
-        @SuppressLint("MissingPermission")
+
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
             super.onConnectionStateChange(gatt, status, newState)
             if (newState == BluetoothGatt .STATE_CONNECTED){
@@ -267,7 +292,7 @@ class BluetoothController(private val context : Context) {
             }
         }
 
-        @SuppressLint("MissingPermission")
+
         override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
             super.onServicesDiscovered(gatt, status)
             Log.i("GATT","Service discovered")
