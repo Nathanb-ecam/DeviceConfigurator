@@ -12,13 +12,12 @@ import android.bluetooth.le.ScanResult
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
-import android.os.Message
 import android.util.Log
 import android.widget.Toast
+import com.example.arduinobluetooth.utils.BluetoothState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.nio.ByteBuffer
 import java.util.UUID
 import com.example.arduinobluetooth.utils.Crypto
 
@@ -29,8 +28,8 @@ class BluetoothController(private val context : Context) {
     private val adapter = bluetoothManager.adapter
 
     private var connectedGatt:BluetoothGatt? = null
-    private val _isConnected = MutableStateFlow<Boolean>(false)
-    val isConnected : StateFlow<Boolean> get() = _isConnected
+    private val _connectionState = MutableStateFlow(BluetoothState.DISCONNECTED)
+    val connectionState : StateFlow<BluetoothState> get() = _connectionState
 
     private val handler = Handler(Looper.getMainLooper())
 
@@ -169,6 +168,8 @@ class BluetoothController(private val context : Context) {
             val arduinoService = gatt.getService(serviceUuid)
             val testCharacteristic = arduinoService?.getCharacteristic(testUuid)
 
+
+
             if (testCharacteristic != null) {
                 val message = "device connection test".toByteArray(Charsets.UTF_8)
                 testCharacteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
@@ -183,15 +184,27 @@ class BluetoothController(private val context : Context) {
     fun configureArduinoDevice(){
         connectedGatt?.let { gatt ->
 
+
             val arduinoService = gatt.getService(serviceUuid)
             val senderIdCharacteristic = arduinoService?.getCharacteristic(senderUuid)
             val senderTokenCharacteristic = arduinoService?.getCharacteristic(senderTokenUuid)
             val senderKeyCharacteristic = arduinoService?.getCharacteristic(encryptKeyUuid)
-            val statusCharacteristic = arduinoService?.getCharacteristic(configStatusUuid)
+            //val statusCharacteristic = arduinoService?.getCharacteristic(configStatusUuid)
+
+            val allDefined = listOf(
+                    senderIdCharacteristic,
+                    senderTokenCharacteristic,
+                    senderKeyCharacteristic
+                )
+                .any { it != null }
 
 
+            if(!allDefined){
+                Log.i("CONFIGURE", "Some characteristics are not defined")
+                return
+            }
 
-            Handler(Looper.getMainLooper()).postDelayed({
+/*            Handler(Looper.getMainLooper()).postDelayed({
                 val CCCD_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
                 val descriptor = statusCharacteristic?.getDescriptor(CCCD_UUID)
 
@@ -203,25 +216,27 @@ class BluetoothController(private val context : Context) {
                 } else {
                     Log.e("Bluetooth", "Descriptor not found for CCCD UUID")
                 }
-            }, 100)
+            }, 100)*/
 
 
             if (senderIdCharacteristic!=null){
                 Handler(Looper.getMainLooper()).postDelayed({
                     val senderUuid  = UUID.fromString("219628ad-1441-4b15-9fbb-406b8f220779")
                     val byteArray = cryptoUtils.uuid128ToByteArray(senderUuid)
+                    Log.i("SENDER UUID",byteArray.toHexString())
                     writeToCharacteristic(senderIdCharacteristic,gatt,byteArray)
                     Log.i("GATT", "Setting send name characteristic")
-                }, 200)
+                }, 0)
             }
 
             if (senderTokenCharacteristic != null) {
                 Handler(Looper.getMainLooper()).postDelayed({
                     val senderToken  = UUID.fromString("6fc6ee94-c981-47c8-ba23-1d9d70bdcea9")
                     val byteArray = cryptoUtils.uuid128ToByteArray(senderToken)
+                    Log.i("TOKEN",byteArray.toHexString())
                     Log.i("GATT", "Setting sender token characteristic")
                     writeToCharacteristic(senderTokenCharacteristic,gatt,byteArray)
-                }, 300)
+                }, 100)
             }
 
             if (senderKeyCharacteristic != null) {
@@ -230,11 +245,12 @@ class BluetoothController(private val context : Context) {
 
                     if(uuid256!= null){
                         val byteArray = cryptoUtils.keyToByteArray(uuid256)
-                        //Log.i("ENCRYPTION KEY",byteArray.toHexString())
+                        Log.i("ENCRYPTION KEY",byteArray.toHexString())
                         Log.i("GATT", "Setting encryption key characteristic")
                         writeToCharacteristic(senderKeyCharacteristic,gatt,byteArray)
+                        _connectionState.value = BluetoothState.CONFIGURED
                     }
-                }, 800)
+                }, 200)
             }
 
 
@@ -280,16 +296,21 @@ class BluetoothController(private val context : Context) {
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
             super.onConnectionStateChange(gatt, status, newState)
             if (newState == BluetoothGatt .STATE_CONNECTED){
-                gatt?.requestMtu(256)
+                gatt?.requestMtu(32) // biggest item to send is the 256 bit key
                 connectedGatt = gatt
-                _isConnected.value = true
+                _connectionState.value = BluetoothState.CONNECTED
                 Handler(Looper.getMainLooper()).postDelayed({
                     gatt?.discoverServices()
                 }, 2000)
             }else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
                 connectedGatt = null
-                _isConnected.value = false
+                if(_connectionState.value != BluetoothState.CONFIGURED){
+                    _connectionState.value = BluetoothState.DISCONNECTED
+                }
+
+
             }
+
         }
 
 
@@ -297,6 +318,33 @@ class BluetoothController(private val context : Context) {
             super.onServicesDiscovered(gatt, status)
             Log.i("GATT","Service discovered")
 
+            val arduinoService = gatt?.getService(serviceUuid)
+            val statusCharacteristic = arduinoService?.getCharacteristic(configStatusUuid)
+
+            val CCCD_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
+            val descriptor = statusCharacteristic?.getDescriptor(CCCD_UUID)
+
+            if (descriptor != null) {
+                descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                val descriptorWriteResult = gatt.writeDescriptor(descriptor)
+                if (descriptorWriteResult == true) {
+                    val setNotification = gatt.setCharacteristicNotification(statusCharacteristic, true)
+                    if(setNotification){
+                        Log.i("GATT Notification", "Notification successfully set")
+
+                    }
+                    //Log.i("GATT", "Descriptor write successful")
+                } else {
+                    Log.e("GATT", "Descriptor write failed")
+                }
+
+
+
+
+            } else {
+                Log.e("Bluetooth", "Descriptor not found for CCCD UUID")
+            }
+            _connectionState.value = BluetoothState.READY_TO_CONFIGURE
         }
 
 

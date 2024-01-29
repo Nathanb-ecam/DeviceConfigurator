@@ -63,6 +63,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material:1.5.4")
+
     //implementation("io.icure:icure-reactive-kotlin-client:0.1.496-g75e6f2371d")@
 
 

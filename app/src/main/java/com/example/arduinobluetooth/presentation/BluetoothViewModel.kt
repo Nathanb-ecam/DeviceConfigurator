@@ -2,14 +2,12 @@ package com.example.arduinobluetooth.presentation
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothGatt
 import android.content.Context
-import android.util.Log
-import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.arduinobluetooth.data.BluetoothController
 import com.example.arduinobluetooth.data.MyBluetoothDevice
+import com.example.arduinobluetooth.utils.BluetoothState
 
 
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,7 +46,7 @@ class BluetoothViewModel (
 
 
 
-    val isConnected : StateFlow<Boolean> = bluetoothController.isConnected.stateIn(viewModelScope, SharingStarted.WhileSubscribed(),false)
+    val connectionState : StateFlow<BluetoothState> = bluetoothController.connectionState.stateIn(viewModelScope, SharingStarted.WhileSubscribed(),BluetoothState.DISCONNECTED)
 
     init {
         // Observe the scannedDevicesFlow from the BluetoothController
@@ -90,6 +88,10 @@ class BluetoothViewModel (
         bluetoothController.stopScanLeDevice(context)
     }
 
+
+    fun emptysearchText(){
+        _searchtext.value = ""
+    }
     fun deleteSearchResults(context:Context){
         bluetoothController.stopScanLeDevice(context = context)
         bluetoothController.disconnectDevice()
@@ -97,7 +99,7 @@ class BluetoothViewModel (
     }
 
 
-    fun connectDevice(context: Context,device : BluetoothDevice){
+    fun connectDevice(device : BluetoothDevice){
         bluetoothController.connectDevice(device)
     }
 

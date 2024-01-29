@@ -37,6 +37,7 @@ class MainActivity : ComponentActivity(){
 
 
         setContent {
+
             ArduinoBluetoothTheme {
                 val navController = rememberNavController()
                 bluetoothController = BluetoothController(applicationContext)
