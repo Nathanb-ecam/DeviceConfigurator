@@ -45,6 +45,7 @@ class BluetoothController(private val context : Context) {
     private val senderUuid = UUID.fromString("3dbd6a55-fcc7-4cd8-811f-2c5754296a0a")
     private val senderTokenUuid = UUID.fromString("0fd7161a-c2e2-44cb-a5ee-9dd3187424fc")
     private val encryptKeyUuid = UUID.fromString("7626adb2-28ab-4327-8ead-bb571cb1d7f0")
+    private val contactId = UUID.fromString("477f3318-3a09-4c09-8273-bfb28163b7fd")
     private val configStatusUuid = UUID.fromString("5fae4e14-ca8f-41d7-bd5b-c3a0498973ae")
 
 
@@ -137,7 +138,7 @@ class BluetoothController(private val context : Context) {
 
     private val leScanCallback: ScanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
-            super.onScanResult(callbackType, result)
+            //super.onScanResult(callbackType, result)
             val device = result.device
             val rssi = result.rssi
 
@@ -154,7 +155,7 @@ class BluetoothController(private val context : Context) {
         }
 
         override fun onScanFailed(errorCode: Int) {
-            super.onScanFailed(errorCode)
+            //super.onScanFailed(errorCode)
             Log.i("BTH",String.format("Error scan %s" ,errorCode))
         }
     }
@@ -171,10 +172,11 @@ class BluetoothController(private val context : Context) {
 
 
             if (testCharacteristic != null) {
-                val message = "device connection test".toByteArray(Charsets.UTF_8)
+                writeToCharacteristic(testCharacteristic,gatt,"1".toByteArray())
+    /*            val message = "device connection test".toByteArray(Charsets.UTF_8)
                 testCharacteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
                 testCharacteristic.setValue(message)
-                gatt.writeCharacteristic(testCharacteristic)
+                gatt.writeCharacteristic(testCharacteristic)*/
             }
         }
     }
@@ -189,6 +191,7 @@ class BluetoothController(private val context : Context) {
             val senderIdCharacteristic = arduinoService?.getCharacteristic(senderUuid)
             val senderTokenCharacteristic = arduinoService?.getCharacteristic(senderTokenUuid)
             val senderKeyCharacteristic = arduinoService?.getCharacteristic(encryptKeyUuid)
+            val contactIdCharacteristic = arduinoService?.getCharacteristic(contactId)
             //val statusCharacteristic = arduinoService?.getCharacteristic(configStatusUuid)
 
             val allDefined = listOf(
@@ -236,12 +239,23 @@ class BluetoothController(private val context : Context) {
                     Log.i("TOKEN",byteArray.toHexString())
                     Log.i("GATT", "Setting sender token characteristic")
                     writeToCharacteristic(senderTokenCharacteristic,gatt,byteArray)
-                }, 100)
+                }, 200)
             }
+
+            if (contactIdCharacteristic != null) {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    val contactId  = UUID.fromString("6fc6ee94-47c8-ba23-c981-1d9d70bdcea9")
+                    val byteArray = cryptoUtils.uuid128ToByteArray(contactId)
+                    Log.i("CONTACT",byteArray.toHexString())
+                    Log.i("GATT", "Setting contact Id characteristic")
+                    writeToCharacteristic(contactIdCharacteristic,gatt,byteArray)
+                }, 400)
+            }
+
 
             if (senderKeyCharacteristic != null) {
                 Handler(Looper.getMainLooper()).postDelayed({
-                    val uuid256 = cryptoUtils.generateAES256()
+   /*                 val uuid256 = cryptoUtils.generateAES256()
 
                     if(uuid256!= null){
                         val byteArray = cryptoUtils.keyToByteArray(uuid256)
@@ -249,13 +263,28 @@ class BluetoothController(private val context : Context) {
                         Log.i("GATT", "Setting encryption key characteristic")
                         writeToCharacteristic(senderKeyCharacteristic,gatt,byteArray)
                         _connectionState.value = BluetoothState.CONFIGURED
-                    }
-                }, 200)
+                    }*/
+                    val hexString = "2b7e151628aed2a6abf7158809cf4f3c2b7e151628aed2a6abf7158809cf4f3c"
+                    val byteArrayKey = hexStringToByteArray(hexString)
+                    writeToCharacteristic(senderKeyCharacteristic,gatt,byteArrayKey)
+                    _connectionState.value = BluetoothState.CONFIGURED
+                }, 600)
             }
 
 
 
         }
+    }
+
+    fun hexStringToByteArray(hexString: String): ByteArray {
+        val result = ByteArray(hexString.length / 2)
+        for (i in hexString.indices step 2) {
+            val firstDigit = Character.digit(hexString[i], 16)
+            val secondDigit = Character.digit(hexString[i + 1], 16)
+            val byteValue = (firstDigit shl 4) + secondDigit
+            result[i / 2] = byteValue.toByte()
+        }
+        return result
     }
 
     fun ByteArray.toHexString(): String {
@@ -294,9 +323,9 @@ class BluetoothController(private val context : Context) {
     private val gattCallback = object : BluetoothGattCallback(){
 
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
-            super.onConnectionStateChange(gatt, status, newState)
+            //super.onConnectionStateChange(gatt, status, newState)
             if (newState == BluetoothGatt .STATE_CONNECTED){
-                gatt?.requestMtu(32) // biggest item to send is the 256 bit key
+                //gatt?.requestMtu(32) // biggest item to send is the 256 bit key
                 connectedGatt = gatt
                 _connectionState.value = BluetoothState.CONNECTED
                 Handler(Looper.getMainLooper()).postDelayed({
@@ -315,7 +344,7 @@ class BluetoothController(private val context : Context) {
 
 
         override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
-            super.onServicesDiscovered(gatt, status)
+            //super.onServicesDiscovered(gatt, status)
             Log.i("GATT","Service discovered")
 
             val arduinoService = gatt?.getService(serviceUuid)
@@ -324,16 +353,15 @@ class BluetoothController(private val context : Context) {
             val CCCD_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
             val descriptor = statusCharacteristic?.getDescriptor(CCCD_UUID)
 
+            gatt?.setCharacteristicNotification(statusCharacteristic, true)
+
+
+
             if (descriptor != null) {
                 descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
                 val descriptorWriteResult = gatt.writeDescriptor(descriptor)
                 if (descriptorWriteResult == true) {
-                    val setNotification = gatt.setCharacteristicNotification(statusCharacteristic, true)
-                    if(setNotification){
-                        Log.i("GATT Notification", "Notification successfully set")
-
-                    }
-                    //Log.i("GATT", "Descriptor write successful")
+                    Log.i("GATT", "Descriptor write successful")
                 } else {
                     Log.e("GATT", "Descriptor write failed")
                 }
@@ -349,7 +377,7 @@ class BluetoothController(private val context : Context) {
 
 
         override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, value: ByteArray) {
-            super.onCharacteristicChanged(gatt, characteristic, value)
+            //super.onCharacteristicChanged(gatt, characteristic, value)
             Log.i("GATT UP","Updated value")
             Handler(Looper.getMainLooper()).post {
                 val statusCharacteristicValue = characteristic.value?.toString() ?: ""

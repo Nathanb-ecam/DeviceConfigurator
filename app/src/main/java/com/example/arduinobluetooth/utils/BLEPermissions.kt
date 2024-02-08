@@ -31,13 +31,9 @@ class BLEPermissions(private val activity : MainActivity) {
         val allPermissionsGranted = permissions.all { it.value }
 
        if (allPermissionsGranted) {
-            // All permissions are granted
-            // Your logic here
            Log.i("PERMISSIONS","All required permissions are granted")
             //Toast.makeText(activity.applicationContext, "All permissions granted", Toast.LENGTH_SHORT).show()
         } else {
-            // At least one permission is denied
-            // Handle accordingly
             Toast.makeText(activity.applicationContext, "Some permissions are missing", Toast.LENGTH_SHORT).show()
         }
     }
