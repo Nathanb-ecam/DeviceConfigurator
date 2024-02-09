@@ -74,6 +74,8 @@ fun BluetoothScreen(
     val searchText by blueViewModel.searchText.collectAsState()
 
     blueViewModel.startScan(context = context)
+    blueViewModel.disconnectCurrentDevice()
+
 
     val buttonDefaults = ButtonDefaults.buttonColors(
         containerColor = Color(context.resources.getColor(R.color.icure_green)),
@@ -89,7 +91,6 @@ fun BluetoothScreen(
     )
 
     if(searchText.isNotEmpty()){
-
         blueViewModel.stopScan(context = context)
     }
 

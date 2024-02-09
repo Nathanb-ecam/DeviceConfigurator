@@ -103,7 +103,9 @@ class BluetoothViewModel (
         bluetoothController.connectDevice(device)
     }
 
-
+    fun disconnectCurrentDevice(){
+        bluetoothController.disconnectDevice()
+    }
     fun testDeviceConnection(){
         bluetoothController.testDeviceConnection()
     }

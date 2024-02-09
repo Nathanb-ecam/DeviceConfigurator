@@ -28,7 +28,7 @@ class BluetoothController(private val context : Context) {
     private val adapter = bluetoothManager.adapter
 
     private var connectedGatt:BluetoothGatt? = null
-    private val _connectionState = MutableStateFlow(BluetoothState.DISCONNECTED)
+    private val _connectionState = MutableStateFlow(BluetoothState.INIT)
     val connectionState : StateFlow<BluetoothState> get() = _connectionState
 
     private val handler = Handler(Looper.getMainLooper())
@@ -108,7 +108,7 @@ class BluetoothController(private val context : Context) {
         updateScannedDevicesRunnable = object : Runnable {
             override fun run() {
                 updateStateFlow()
-                handler.postDelayed(this, 300)
+                handler.postDelayed(this, 2000)
             }
         }
         handler.postDelayed(updateScannedDevicesRunnable!!, 1000)
@@ -178,7 +178,7 @@ class BluetoothController(private val context : Context) {
                 testCharacteristic.setValue(message)
                 gatt.writeCharacteristic(testCharacteristic)*/
             }
-        }
+        }?: Log.i("Connected GATT","Not connected to a device")
     }
 
 
@@ -234,7 +234,7 @@ class BluetoothController(private val context : Context) {
 
             if (senderTokenCharacteristic != null) {
                 Handler(Looper.getMainLooper()).postDelayed({
-                    val senderToken  = UUID.fromString("6fc6ee94-c981-47c8-ba23-1d9d70bdcea9")
+                    val senderToken  = UUID.fromString("1ac6ee94-c981-47c8-ba23-1d9d70bdce9c")
                     val byteArray = cryptoUtils.uuid128ToByteArray(senderToken)
                     Log.i("TOKEN",byteArray.toHexString())
                     Log.i("GATT", "Setting sender token characteristic")
@@ -267,13 +267,14 @@ class BluetoothController(private val context : Context) {
                     val hexString = "2b7e151628aed2a6abf7158809cf4f3c2b7e151628aed2a6abf7158809cf4f3c"
                     val byteArrayKey = hexStringToByteArray(hexString)
                     writeToCharacteristic(senderKeyCharacteristic,gatt,byteArrayKey)
-                    _connectionState.value = BluetoothState.CONFIGURED
+
+                    _connectionState.value = BluetoothState.CONFIGURED// should be triggered by a notification of the device
                 }, 600)
             }
 
 
 
-        }
+        }?:Log.i("Connected GATT","Not connected to a device")
     }
 
     fun hexStringToByteArray(hexString: String): ByteArray {
@@ -299,6 +300,10 @@ class BluetoothController(private val context : Context) {
 
 
     fun connectDevice(device : BluetoothDevice){
+
+/*        if(connectedGatt?.device?.address != null){ // if user was already connected to another device, we disconnect the other first
+            connectedGatt = null
+        }*/
         try {
             device.connectGatt(context,false,gattCallback)
             Log.i("GATT", "Connecting to gatt")
@@ -313,8 +318,9 @@ class BluetoothController(private val context : Context) {
         connectedGatt?.let{gatt->
             try{
                 gatt.disconnect()
-            }catch(e:Error){
                 Log.i("GATT Device","Device disconnected")
+            }catch(e:Error){
+                Log.i("GATT Device","No device were connected")
             }
         }
     }
@@ -327,17 +333,24 @@ class BluetoothController(private val context : Context) {
             if (newState == BluetoothGatt .STATE_CONNECTED){
                 //gatt?.requestMtu(32) // biggest item to send is the 256 bit key
                 connectedGatt = gatt
+                Log.i("STATE","Connected")
                 _connectionState.value = BluetoothState.CONNECTED
                 Handler(Looper.getMainLooper()).postDelayed({
                     gatt?.discoverServices()
                 }, 2000)
             }else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
+                Log.i("STATE","Disconnected")
                 connectedGatt = null
                 if(_connectionState.value != BluetoothState.CONFIGURED){
                     _connectionState.value = BluetoothState.DISCONNECTED
                 }
 
 
+            }else if (newState == BluetoothGatt.STATE_DISCONNECTING){
+                Log.i("STATE","Disconnecting")
+            }else if (newState == BluetoothGatt.STATE_CONNECTING){
+
+                Log.i("STATE","Connecting")
             }
 
         }
