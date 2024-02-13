@@ -114,5 +114,9 @@ class BluetoothViewModel (
         bluetoothController.configureArduinoDevice()
     }
 
+    fun updateConnectionState(state : BluetoothState){
+        bluetoothController.updateConnectedState(state)
+    }
+
 
 }

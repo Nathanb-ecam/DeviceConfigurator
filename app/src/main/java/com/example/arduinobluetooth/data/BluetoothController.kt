@@ -14,6 +14,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
+import androidx.core.os.postDelayed
 import com.example.arduinobluetooth.utils.BluetoothState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -54,6 +55,10 @@ class BluetoothController(private val context : Context) {
     //private val SCAN_PERIOD :Long = 1000;
 
 
+
+    fun updateConnectedState(state : BluetoothState){
+        _connectionState.value = state
+    }
 
     fun scanLeDevice(context: Context,){
             if(!adapter.isEnabled){
@@ -271,7 +276,8 @@ class BluetoothController(private val context : Context) {
                     val byteArrayKey = hexStringToByteArray(hexString)
                     writeToCharacteristic(senderKeyCharacteristic,gatt,byteArrayKey)
 
-                    _connectionState.value = BluetoothState.CONFIGURED// should be triggered by a notification of the device
+                    _connectionState.value = BluetoothState.CONFIGURED
+
                 }, 600)
             }
 
@@ -323,9 +329,10 @@ class BluetoothController(private val context : Context) {
                 gatt.disconnect()
                 Log.i("GATT Device","Device disconnected")
             }catch(e:Error){
-                Log.i("GATT Device","No device were connected")
+                Log.i("ERROR", "Error while disconnecting device")
             }
         }
+        Log.i("GATT Device","No device were connected")
     }
 
 
@@ -340,11 +347,12 @@ class BluetoothController(private val context : Context) {
                 _connectionState.value = BluetoothState.CONNECTED
                 Handler(Looper.getMainLooper()).postDelayed({
                     gatt?.discoverServices()
-                }, 2000)
+                }, 3500)
             }else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-                Log.i("STATE","Disconnected")
+
                 connectedGatt = null
                 if(_connectionState.value != BluetoothState.CONFIGURED){
+                    Log.i("STATE","Disconnected")
                     _connectionState.value = BluetoothState.DISCONNECTED
                 }
 
@@ -352,7 +360,6 @@ class BluetoothController(private val context : Context) {
             }else if (newState == BluetoothGatt.STATE_DISCONNECTING){
                 Log.i("STATE","Disconnecting")
             }else if (newState == BluetoothGatt.STATE_CONNECTING){
-
                 Log.i("STATE","Connecting")
             }
 

@@ -5,5 +5,5 @@ enum class BluetoothState {
     CONNECTED,
     READY_TO_CONFIGURE,
     DISCONNECTED,
-    CONFIGURED // the device is disconnected since its configured
+    CONFIGURED // the device disconnected since its has been configured
 }

@@ -13,6 +13,7 @@ import androidx.compose.material3.ButtonColors
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.Check
+import androidx.compose.material.icons.twotone.CheckCircle
 import androidx.compose.material.icons.twotone.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -53,9 +54,7 @@ fun DeviceDetailScreen(
     ) {
 
     val context = LocalContext.current
-
     val device = blueViewModel.getDeviceByAddress(deviceAddress)
-
     val connectionState by blueViewModel.connectionState.collectAsState()
 
 
@@ -63,51 +62,79 @@ fun DeviceDetailScreen(
         containerColor = Color(context.resources.getColor(R.color.icure_green)),
         contentColor = Color.White
     )
-
-
     var unableToConnect by remember { mutableStateOf(false) }
 
 
-
-
-    if(unableToConnect){
-        Popup(buttonColors = buttonDefaults, alertTitle = "Unable to connect", buttonText ="<-", onPopupClose = {navController.navigate(Screen.BlueScreen.route)} )
-    }
-
-
-
-    when (connectionState) {
-        BluetoothState.READY_TO_CONFIGURE -> {
-            device?.let{
-                DeviceConfiguration(device,blueViewModel,buttonDefaults,connectionState)
-            }
-        }
-
-        BluetoothState.CONFIGURED -> {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center)
+    {
+        if(unableToConnect){
             Popup(
                 buttonColors = buttonDefaults,
-                alertTitle = "Device successfully configured",
-                buttonText = "Ok",
-                onPopupClose = {navController.navigate(Screen.BlueScreen.route)}
+                alertTitle = "Unable to connect",
+                buttonText ="Close",
+                onPopupClose = {
+                    navController.navigate(Screen.BlueScreen.route)
+                               },
+                /*alertIcon = Icons.Outlined.,*/
+                modifier = Modifier
+                    .width(300.dp)
+                    /*.padding(16.dp)*/
+                    .wrapContentWidth(Alignment.CenterHorizontally)
+                ,
+                iconColor = Color.Red
             )
         }
-        else -> {
-            LaunchedEffect(Unit) {
-                delay(10000)
-                unableToConnect = true
+
+
+        when (connectionState) {
+            BluetoothState.READY_TO_CONFIGURE -> {
+                device?.let{
+                    DeviceConfiguration(device,blueViewModel,buttonDefaults,connectionState)
+                }
             }
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(10.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.wrapContentSize(),
+            BluetoothState.CONFIGURED -> {
+                Popup(
+                    buttonColors = buttonDefaults,
+                    alertTitle = "Device successfully configured",
+                    buttonText = "Close",
+                    onPopupClose = {
+                        blueViewModel.updateConnectionState(BluetoothState.DISCONNECTED)
+                        navController.navigate(Screen.BlueScreen.route)
+
+                                   },
+                    alertIcon = Icons.TwoTone.CheckCircle,
+                    modifier = Modifier
+                        .width(300.dp)
+                        .padding(16.dp)
+                        .wrapContentWidth(Alignment.CenterHorizontally),
+                    iconColor = Color(context.getColor(R.color.icure_green))
+
+                )
+            }
+            else -> {
+                LaunchedEffect(Unit) {
+                    delay(10000)
+                    unableToConnect = true
+                }
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        color = Color(context.resources.getColor(R.color.icure_green)),
+                        modifier = Modifier.wrapContentSize(),
                     )
+                }
             }
         }
     }
+
 
 }
 
@@ -127,7 +154,7 @@ fun DeviceConfiguration(device:MyBluetoothDevice,blueViewModel: BluetoothViewMod
             modifier = Modifier
                 .fillMaxWidth()
                 .background(Color.White)
-                .fillMaxHeight(0.5f)
+                .wrapContentHeight()
                 .padding(16.dp)
         ) {
             Column(
@@ -136,11 +163,11 @@ fun DeviceConfiguration(device:MyBluetoothDevice,blueViewModel: BluetoothViewMod
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
-                val deviceName = device.device.name ?: "No Name"
+                val deviceName = device.device.name ?: "Undefined"
 
                 Row(horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(text = "Device : ${deviceName}", style = h1)
-                    Icon(imageVector = icon, contentDescription = "lo", tint = iconColor)
+                    /*Icon(imageVector = icon, contentDescription = "lo", tint = iconColor)*/
 
                 }
 
@@ -155,7 +182,7 @@ fun DeviceConfiguration(device:MyBluetoothDevice,blueViewModel: BluetoothViewMod
                     colors = buttonDefaults,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp)
+                        /*.padding(vertical = 8.dp)*/
                 ) {
                     Text(text = "Toggle builtin led")
                 }
@@ -166,7 +193,7 @@ fun DeviceConfiguration(device:MyBluetoothDevice,blueViewModel: BluetoothViewMod
                     colors = buttonDefaults,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp)
+                        /*.padding(vertical = 8.dp)*/
                 ) {
                     Text(text = "Configure")
                 }
