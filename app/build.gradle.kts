@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.arduinobluetooth"
-        minSdk = 30
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -64,7 +64,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material:1.5.4")
 
-    //implementation("io.icure:icure-reactive-kotlin-client:0.1.496-g75e6f2371d")@
+    //implementation("io.icure:icure-reactive-kotlin-client:0.1.496-g75e6f2371d")
 
 
     testImplementation("junit:junit:4.13.2")

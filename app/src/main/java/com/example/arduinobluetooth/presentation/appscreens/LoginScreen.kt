@@ -75,7 +75,7 @@ fun LoginScreen(navController: NavController){
                 Image(
                     painter = painterResource(R.drawable.icure_logo),
                     contentDescription ="icure logo",
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(0.6f).align(Alignment.CenterHorizontally)
                 )
 
 

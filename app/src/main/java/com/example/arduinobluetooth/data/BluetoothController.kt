@@ -221,36 +221,39 @@ class BluetoothController(private val context : Context) {
                 }
             }, 100)*/
 
+            if (contactIdCharacteristic != null) {
+                Handler(Looper.getMainLooper()).postDelayed({
+                    val contactId  = UUID.randomUUID()
+                    val byteArray = cryptoUtils.uuid128ToByteArray(contactId)
+                    Log.i("CONTACT",byteArray.toHexString())
+                    Log.i("CONTACT ID BYTES", byteArray.size.toString())
+                    Log.i("GATT", "Setting contact Id characteristic")
+                    writeToCharacteristic(contactIdCharacteristic,gatt,byteArray)
+                }, 0)
+            }
 
             if (senderIdCharacteristic!=null){
                 Handler(Looper.getMainLooper()).postDelayed({
-                    val senderUuid  = UUID.fromString("219628ad-1441-4b15-9fbb-406b8f220779")
-                    val byteArray = cryptoUtils.uuid128ToByteArray(senderUuid)
+
+                    val byteArray = "b93676@icure.com".toByteArray(Charsets.UTF_8)
                     Log.i("SENDER UUID",byteArray.toHexString())
                     writeToCharacteristic(senderIdCharacteristic,gatt,byteArray)
                     Log.i("GATT", "Setting send name characteristic")
-                }, 0)
+                }, 200)
             }
 
             if (senderTokenCharacteristic != null) {
                 Handler(Looper.getMainLooper()).postDelayed({
-                    val senderToken  = UUID.fromString("1ac6ee94-c981-47c8-ba23-1d9d70bdce9c")
+                    val senderToken  = UUID.fromString("349fab06-2b58-4213-b00b-157ec0420c2e")
                     val byteArray = cryptoUtils.uuid128ToByteArray(senderToken)
                     Log.i("TOKEN",byteArray.toHexString())
+                    Log.i("TOKEN BYTES", byteArray.size.toString())
                     Log.i("GATT", "Setting sender token characteristic")
                     writeToCharacteristic(senderTokenCharacteristic,gatt,byteArray)
-                }, 200)
-            }
-
-            if (contactIdCharacteristic != null) {
-                Handler(Looper.getMainLooper()).postDelayed({
-                    val contactId  = UUID.fromString("6fc6ee94-47c8-ba23-c981-1d9d70bdcea9")
-                    val byteArray = cryptoUtils.uuid128ToByteArray(contactId)
-                    Log.i("CONTACT",byteArray.toHexString())
-                    Log.i("GATT", "Setting contact Id characteristic")
-                    writeToCharacteristic(contactIdCharacteristic,gatt,byteArray)
                 }, 400)
             }
+
+
 
 
             if (senderKeyCharacteristic != null) {
