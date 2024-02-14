@@ -50,6 +50,7 @@ android {
     }
 }
 
+
 dependencies {
 
     implementation("androidx.core:core-ktx:1.12.0")
@@ -64,7 +65,8 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material:1.5.4")
 
-    //implementation("io.icure:icure-reactive-kotlin-client:0.1.496-g75e6f2371d")
+    implementation("com.icure:icure-sdk:0.0.3")
+    implementation("com.icure:kryptom:0.0.3")
 
 
     testImplementation("junit:junit:4.13.2")

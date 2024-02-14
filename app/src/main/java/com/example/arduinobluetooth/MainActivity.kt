@@ -13,9 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
-import com.example.arduinobluetooth.data.BluetoothController
+import com.example.arduinobluetooth.data.BluetoothControllerImpl
 import com.example.arduinobluetooth.data.BottomNavItem
 import com.example.arduinobluetooth.presentation.BluetoothViewModel
+import com.example.arduinobluetooth.presentation.LoginViewModel
 import com.example.arduinobluetooth.presentation.Navigation
 import com.example.arduinobluetooth.ui.theme.ArduinoBluetoothTheme
 import com.example.arduinobluetooth.utils.BLEPermissions
@@ -23,8 +24,10 @@ import com.example.arduinobluetooth.utils.BLEPermissions
 
 class MainActivity : ComponentActivity(){
     private lateinit var blePermissions: BLEPermissions
-    private lateinit var bluetoothController : BluetoothController
+    private lateinit var bluetoothController : BluetoothControllerImpl
     private lateinit var blueViewModel : BluetoothViewModel
+    private lateinit var loginViewModel: LoginViewModel
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,8 +41,9 @@ class MainActivity : ComponentActivity(){
 
             ArduinoBluetoothTheme {
                 val navController = rememberNavController()
-                bluetoothController = BluetoothController(applicationContext)
+                bluetoothController = BluetoothControllerImpl(applicationContext)
                 blueViewModel  = viewModel{BluetoothViewModel(bluetoothController)}
+                loginViewModel  = viewModel{LoginViewModel()}
 
 
                 val bottomNavItems = listOf(
@@ -59,7 +63,12 @@ class MainActivity : ComponentActivity(){
                     //color = MaterialTheme.colorScheme.background
                     color= Color(applicationContext.resources.getColor(com.example.arduinobluetooth.R.color.icure_white))
                 ) {
-                    Navigation(navController=navController,bluetoothViewModel = blueViewModel,bottomNavItems = bottomNavItems)
+                    Navigation(
+                        navController=navController,
+                        bluetoothViewModel = blueViewModel,
+                        loginViewModel = loginViewModel,
+                        bottomNavItems = bottomNavItems
+                    )
                 }
             }
         }

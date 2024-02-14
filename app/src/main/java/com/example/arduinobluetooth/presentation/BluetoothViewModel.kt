@@ -5,7 +5,8 @@ import android.bluetooth.BluetoothDevice
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.arduinobluetooth.data.BluetoothController
+import com.example.arduinobluetooth.data.BluetoothConfigData
+import com.example.arduinobluetooth.data.IBluetoothController
 import com.example.arduinobluetooth.data.MyBluetoothDevice
 import com.example.arduinobluetooth.utils.BluetoothState
 
@@ -22,7 +23,7 @@ import kotlinx.coroutines.flow.stateIn
 
 
 class BluetoothViewModel (
-    private val bluetoothController: BluetoothController
+    private val bluetoothController: IBluetoothController
 ): ViewModel() {
 
     private val _searchtext = MutableStateFlow("")
@@ -62,8 +63,8 @@ class BluetoothViewModel (
 
     @SuppressLint("MissingPermission")
     fun doesMatchSearchQuery(query:String, device: MyBluetoothDevice):Boolean{
-        val matching = device.device.name
-        if(device.device.name != null){
+        val matching = device.name
+        if(device.name != null){
             return matching.startsWith(query,ignoreCase = true)
         }
         return false
@@ -77,7 +78,7 @@ class BluetoothViewModel (
 
 
     fun getDeviceByAddress(address : String?) : MyBluetoothDevice?{
-        return _scannedDevices.value.firstOrNull{it.device.address == address}
+        return _scannedDevices.value.firstOrNull{it.address == address}
     }
 
     fun startScan(context: Context) {
@@ -110,8 +111,8 @@ class BluetoothViewModel (
         bluetoothController.testDeviceConnection()
     }
 
-    fun configureArduinoDevice(){
-        bluetoothController.configureArduinoDevice()
+    fun configureArduinoDevice(configData: BluetoothConfigData){
+        bluetoothController.configureArduinoDevice(configData)
     }
 
     fun updateConnectionState(state : BluetoothState){

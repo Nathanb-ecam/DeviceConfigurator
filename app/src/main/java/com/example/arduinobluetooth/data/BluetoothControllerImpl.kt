@@ -14,7 +14,6 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
-import androidx.core.os.postDelayed
 import com.example.arduinobluetooth.utils.BluetoothState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,18 +23,18 @@ import com.example.arduinobluetooth.utils.Crypto
 
 
 @SuppressLint("MissingPermission")
-class BluetoothController(private val context : Context) {
+class BluetoothControllerImpl(private val context : Context) : IBluetoothController{
     private val bluetoothManager = context.getSystemService(BluetoothManager::class.java)
     private val adapter = bluetoothManager.adapter
 
     private var connectedGatt:BluetoothGatt? = null
     private val _connectionState = MutableStateFlow(BluetoothState.INIT)
-    val connectionState : StateFlow<BluetoothState> get() = _connectionState
+    override val connectionState : StateFlow<BluetoothState> get() = _connectionState
 
     private val handler = Handler(Looper.getMainLooper())
 
     private val _scannedDevices = MutableStateFlow<List<MyBluetoothDevice>>(emptyList())
-    val scannedDevices: StateFlow<List<MyBluetoothDevice>> = _scannedDevices.asStateFlow()
+    override val scannedDevices: StateFlow<List<MyBluetoothDevice>> = _scannedDevices.asStateFlow()
 
     private var devRealTimeRssi = mutableListOf<MyBluetoothDevice>() // to contain address and RSSI value
 
@@ -56,11 +55,11 @@ class BluetoothController(private val context : Context) {
 
 
 
-    fun updateConnectedState(state : BluetoothState){
+    override fun updateConnectedState(state : BluetoothState){
         _connectionState.value = state
     }
 
-    fun scanLeDevice(context: Context,){
+    override fun scanLeDevice(context: Context,){
             if(!adapter.isEnabled){
                 Log.i("BTH","Bluetooth not enabled")
                 Toast.makeText(context, "Enable Bluetooth", Toast.LENGTH_SHORT).show()
@@ -80,7 +79,7 @@ class BluetoothController(private val context : Context) {
     }
 
 
-    fun stopScanLeDevice(context: Context){
+    override  fun stopScanLeDevice(context: Context){
         if(!adapter.isEnabled){
             Log.i("BTH","Bluetooth not enabled")
             return
@@ -95,7 +94,7 @@ class BluetoothController(private val context : Context) {
             Log.i("Exception",e.toString())
         }
     }
-    fun deleteSearchResults(){
+    override fun deleteSearchResults(){
         stopScanLeDevice(context = context)
         stopRefreshingDeviceValues()
         devRealTimeRssi = mutableListOf()
@@ -128,7 +127,7 @@ class BluetoothController(private val context : Context) {
     private fun updateStateFlow() {
         val updatedList = _scannedDevices.value.toMutableList().apply {
             devRealTimeRssi.forEach { newDevice ->
-                val existingDeviceIndex = indexOfFirst { it.device.address == newDevice.device.address }
+                val existingDeviceIndex = indexOfFirst { it.address == newDevice.address }
                 if (existingDeviceIndex != -1) {
                     // Device already exists, update its RSSI value
                     this[existingDeviceIndex] = newDevice
@@ -141,15 +140,25 @@ class BluetoothController(private val context : Context) {
         _scannedDevices.value = updatedList
     }
 
+    fun BluetoothDevice.toMyBluetoothDevice(rssi : Int):MyBluetoothDevice{
+        return MyBluetoothDevice(
+            name = this.name ?: "Unknown",
+            address = this.address,
+            rssi = rssi
+        )
+    }
+
     private val leScanCallback: ScanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             //super.onScanResult(callbackType, result)
             val device = result.device
             val rssi = result.rssi
 
-            val newDevice = MyBluetoothDevice(device, rssi)
 
-            val existingDeviceIndex = devRealTimeRssi.indexOfFirst { it.device.address == newDevice.device.address }
+            /*val newDevice = MyBluetoothDevice(device, rssi)*/
+            val newDevice = device.toMyBluetoothDevice(rssi)
+
+            val existingDeviceIndex = devRealTimeRssi.indexOfFirst { it.address == newDevice.address }
             if (existingDeviceIndex != -1) {
                 // update the already existing device
                 devRealTimeRssi[existingDeviceIndex] = newDevice
@@ -168,7 +177,7 @@ class BluetoothController(private val context : Context) {
 
 
     // toggle arduino builtin Led to ensure we are communicating with the right device
-    fun testDeviceConnection() {
+    override fun testDeviceConnection() {
         connectedGatt?.let { gatt ->
 
             val arduinoService = gatt.getService(serviceUuid)
@@ -188,7 +197,7 @@ class BluetoothController(private val context : Context) {
 
 
 
-    fun configureArduinoDevice(){
+    override fun configureArduinoDevice(configData: BluetoothConfigData){
         connectedGatt?.let { gatt ->
 
 
@@ -228,7 +237,8 @@ class BluetoothController(private val context : Context) {
 
             if (contactIdCharacteristic != null) {
                 Handler(Looper.getMainLooper()).postDelayed({
-                    val contactId  = UUID.randomUUID()
+                    val contactId  = UUID.fromString(configData.cid)
+                    Log.i("SOLUTION","Cid : ${contactId}")
                     val byteArray = cryptoUtils.uuid128ToByteArray(contactId)
                     Log.i("CONTACT",byteArray.toHexString())
                     Log.i("CONTACT ID BYTES", byteArray.size.toString())
@@ -239,8 +249,8 @@ class BluetoothController(private val context : Context) {
 
             if (senderIdCharacteristic!=null){
                 Handler(Looper.getMainLooper()).postDelayed({
-
-                    val byteArray = "b93676@icure.com".toByteArray(Charsets.UTF_8)
+                    Log.i("SOLUTION","Username : ${configData.uid}")
+                    val byteArray = configData.uid.toByteArray(Charsets.UTF_8)
                     Log.i("SENDER UUID",byteArray.toHexString())
                     writeToCharacteristic(senderIdCharacteristic,gatt,byteArray)
                     Log.i("GATT", "Setting send name characteristic")
@@ -249,7 +259,8 @@ class BluetoothController(private val context : Context) {
 
             if (senderTokenCharacteristic != null) {
                 Handler(Looper.getMainLooper()).postDelayed({
-                    val senderToken  = UUID.fromString("349fab06-2b58-4213-b00b-157ec0420c2e")
+                    val senderToken  = UUID.fromString(configData.password)
+                    Log.i("SOLUTION","Token : ${configData.password}")
                     val byteArray = cryptoUtils.uuid128ToByteArray(senderToken)
                     Log.i("TOKEN",byteArray.toHexString())
                     Log.i("TOKEN BYTES", byteArray.size.toString())
@@ -272,7 +283,8 @@ class BluetoothController(private val context : Context) {
                         writeToCharacteristic(senderKeyCharacteristic,gatt,byteArray)
                         _connectionState.value = BluetoothState.CONFIGURED
                     }*/
-                    val hexString = "2b7e151628aed2a6abf7158809cf4f3c2b7e151628aed2a6abf7158809cf4f3c"
+                    val hexString = configData.key
+                    Log.i("SOLUTION","Key : ${hexString}")
                     val byteArrayKey = hexStringToByteArray(hexString)
                     writeToCharacteristic(senderKeyCharacteristic,gatt,byteArrayKey)
 
@@ -308,7 +320,7 @@ class BluetoothController(private val context : Context) {
     }
 
 
-    fun connectDevice(device : BluetoothDevice){
+    override fun connectDevice(device : BluetoothDevice){
 
 /*        if(connectedGatt?.device?.address != null){ // if user was already connected to another device, we disconnect the other first
             connectedGatt = null
@@ -323,7 +335,7 @@ class BluetoothController(private val context : Context) {
 
 
 
-    fun disconnectDevice(){
+    override fun disconnectDevice(){
         connectedGatt?.let{gatt->
             try{
                 gatt.disconnect()
@@ -408,6 +420,9 @@ class BluetoothController(private val context : Context) {
             }
         }
     }
+
+
+
 
 
 

@@ -27,17 +27,38 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.arduinobluetooth.presentation.BluetoothViewModel
+import com.example.arduinobluetooth.presentation.LoginViewModel
+import com.icure.sdk.api.IcureApi
+import com.icure.sdk.auth.UsernamePassword
+import com.icure.sdk.storage.impl.VolatileStorageFacade
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalGraphicsApi::class)
 @Composable
 fun HelpScreen(
     navController: NavController,
+    loginViewModel : LoginViewModel = viewModel()
 
 ) {
-    Column {
-        Text(text="Help screen")
-    }
+
+/*    LaunchedEffect("apiInit"){
+        coroutineScope {
+            *//*loginViewModel.apiInit()*//*
+            loginViewModel.apiInitialize("18092@ecam.be", "77811dcf-1846-4ce4-89c4-cffcdc822657")
+            loginViewModel.getDeviceConfigData()
+        }
+    }*/
+
+
+
+
+
+
 }
 
 

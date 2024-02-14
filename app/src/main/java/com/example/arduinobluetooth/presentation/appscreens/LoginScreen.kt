@@ -22,20 +22,30 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.arduinobluetooth.R
 import com.example.arduinobluetooth.Screen
+import com.example.arduinobluetooth.presentation.BluetoothViewModel
+import com.example.arduinobluetooth.presentation.LoginViewModel
 import com.example.arduinobluetooth.ui.theme.ArduinoBluetoothTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalGraphicsApi::class)
 @Composable
-fun LoginScreen(navController: NavController){
+fun LoginScreen(
+    navController: NavController,
+    loginViewModel: LoginViewModel
+){
 
     // need to fetch all authorized users
 
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
 
     val textFieldColors = androidx.compose.material.TextFieldDefaults.outlinedTextFieldColors(
@@ -47,17 +57,17 @@ fun LoginScreen(navController: NavController){
     )
 
 
-    var username by rememberSaveable() { mutableStateOf("") }
-    var password by rememberSaveable() { mutableStateOf("") }
-    //val uiState by userViewModel.uiState.collectAsState()
+    var username by rememberSaveable() { mutableStateOf("18092@ecam.be") }
+    var password by rememberSaveable() { mutableStateOf("77811dcf-1846-4ce4-89c4-cffcdc822657") }
+    val uiState by loginViewModel.uiState.collectAsState()
 
 
 
- /*   LaunchedEffect(uiState.loggedIn){
-        if (uiState.loggedIn){
-            navController.navigate(Screen.MenuScreen.route)
+    LaunchedEffect(uiState.finishedConfiguring){
+        if (uiState.finishedConfiguring){
+            navController.navigate(Screen.BlueScreen.route)
         }
-    }*/
+    }
 
     Column(
         modifier = Modifier
@@ -75,7 +85,9 @@ fun LoginScreen(navController: NavController){
                 Image(
                     painter = painterResource(R.drawable.icure_logo),
                     contentDescription ="icure logo",
-                    modifier = Modifier.fillMaxWidth(0.6f).align(Alignment.CenterHorizontally)
+                    modifier = Modifier
+                        .fillMaxWidth(0.6f)
+                        .align(Alignment.CenterHorizontally)
                 )
 
 
@@ -116,8 +128,18 @@ fun LoginScreen(navController: NavController){
                         contentColor = Color.White
                     ),
                     onClick = {
-                        //userViewModel.authentificate(orderViewModel, Login(username,password));
-                        navController.navigate(Screen.BlueScreen.route)
+
+                        scope.launch{
+                            if(!uiState.apiInitalized){
+                                val logged = loginViewModel.apiInitialize(username, password)
+                                if (logged){
+                                    loginViewModel.getDeviceConfigData()
+                                }
+                            }
+
+
+                            /*navController.navigate(Screen.BlueScreen.route)*/
+                        }
                         Log.i("Credentials","${username} ${password}")
 
                     }){
@@ -137,8 +159,9 @@ fun LoginPreview() {
 
     ArduinoBluetoothTheme {
         val navController = rememberNavController()
+        val loginViewModel = viewModel{LoginViewModel()}
 
-        LoginScreen(navController = navController)
+        LoginScreen(navController = navController,loginViewModel = loginViewModel)
 
 
     }

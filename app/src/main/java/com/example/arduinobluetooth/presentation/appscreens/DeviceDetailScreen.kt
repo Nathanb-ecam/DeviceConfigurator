@@ -31,12 +31,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.arduinobluetooth.R
 import com.example.arduinobluetooth.Screen
+import com.example.arduinobluetooth.data.BluetoothConfigData
 import com.example.arduinobluetooth.data.MyBluetoothDevice
 import com.example.arduinobluetooth.h1
 import com.example.arduinobluetooth.h3
 import com.example.arduinobluetooth.p
 import com.example.arduinobluetooth.pHint
 import com.example.arduinobluetooth.presentation.BluetoothViewModel
+import com.example.arduinobluetooth.presentation.LoginViewModel
 import com.example.arduinobluetooth.presentation.uiComponents.Popup
 import com.example.arduinobluetooth.utils.BluetoothState
 import kotlinx.coroutines.delay
@@ -50,12 +52,14 @@ import kotlinx.coroutines.launch
 fun DeviceDetailScreen(
     navController: NavController,
     blueViewModel : BluetoothViewModel,
+    loginViewModel: LoginViewModel,
     deviceAddress : String?,
     ) {
 
     val context = LocalContext.current
     val device = blueViewModel.getDeviceByAddress(deviceAddress)
     val connectionState by blueViewModel.connectionState.collectAsState()
+    val loginUIState = loginViewModel.uiState.collectAsState()
 
 
     val buttonDefaults = ButtonDefaults.buttonColors(
@@ -92,9 +96,16 @@ fun DeviceDetailScreen(
 
         when (connectionState) {
             BluetoothState.READY_TO_CONFIGURE -> {
-                device?.let{
-                    DeviceConfiguration(device,blueViewModel,buttonDefaults,connectionState)
+                Log.i("finishedConfiguring",loginUIState.value.finishedConfiguring.toString())
+                if(loginUIState.value.finishedConfiguring){
+                    device?.let{
+                        val deviceConfigData = loginUIState.value.deviceConfigData
+                        DeviceConfiguration(device,deviceConfigData,blueViewModel,buttonDefaults,connectionState)
+                    }
+                }else{
+                    Log.i("CONFIG", "Missing informations to configure the device")
                 }
+
             }
             BluetoothState.CONFIGURED -> {
                 Popup(
@@ -141,7 +152,7 @@ fun DeviceDetailScreen(
 
 @SuppressLint("MissingPermission")
 @Composable
-fun DeviceConfiguration(device:MyBluetoothDevice,blueViewModel: BluetoothViewModel, buttonDefaults: ButtonColors,connectionState : BluetoothState){
+fun DeviceConfiguration(device:MyBluetoothDevice, deviceConfigData : BluetoothConfigData, blueViewModel: BluetoothViewModel, buttonDefaults: ButtonColors, connectionState : BluetoothState){
     val icon = if(connectionState == BluetoothState.CONFIGURED) Icons.TwoTone.Check else Icons.TwoTone.Close
     val iconColor = if(connectionState == BluetoothState.CONFIGURED) Color.Green else Color.Red
     Box(
@@ -163,7 +174,7 @@ fun DeviceConfiguration(device:MyBluetoothDevice,blueViewModel: BluetoothViewMod
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
-                val deviceName = device.device.name ?: "Undefined"
+                val deviceName = device.name ?: "Undefined"
 
                 Row(horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(text = "Device : ${deviceName}", style = h1)
@@ -171,8 +182,8 @@ fun DeviceConfiguration(device:MyBluetoothDevice,blueViewModel: BluetoothViewMod
 
                 }
 
-                if (device.device.address != null) {
-                    Text(text = device.device.address, style = h3)
+                if (device.address != null) {
+                    Text(text = device.address, style = h3)
                 }
 
                 Button(
@@ -188,7 +199,7 @@ fun DeviceConfiguration(device:MyBluetoothDevice,blueViewModel: BluetoothViewMod
                 }
                 Button(
                     onClick = {
-                        blueViewModel.configureArduinoDevice()
+                        blueViewModel.configureArduinoDevice(configData = deviceConfigData)
                     },
                     colors = buttonDefaults,
                     modifier = Modifier

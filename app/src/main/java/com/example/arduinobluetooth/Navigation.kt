@@ -30,10 +30,10 @@ import com.example.arduinobluetooth.presentation.appscreens.LoginScreen
 
 
 @Composable
-fun Navigation(navController : NavHostController, bluetoothViewModel: BluetoothViewModel, bottomNavItems : List<BottomNavItem>){
+fun Navigation(navController : NavHostController, bluetoothViewModel: BluetoothViewModel, loginViewModel: LoginViewModel,bottomNavItems : List<BottomNavItem>){
     NavHost(navController = navController, startDestination = Screen.LoginScreen.route) {
         composable(route = Screen.LoginScreen.route) {
-            LoginScreen(navController = navController)
+            LoginScreen(navController = navController,loginViewModel = loginViewModel)
         }
 
         composable(route = Screen.BlueScreen.route) {
@@ -52,7 +52,7 @@ fun Navigation(navController : NavHostController, bluetoothViewModel: BluetoothV
         ) {
             val deviceAddress = it.arguments?.getString("deviceAddress")
             ScreenScaffolder(navController = navController, bottomNavItems = bottomNavItems) {
-                DeviceDetailScreen(navController = navController,blueViewModel = bluetoothViewModel, deviceAddress = deviceAddress)
+                DeviceDetailScreen(navController = navController,blueViewModel = bluetoothViewModel,loginViewModel = loginViewModel, deviceAddress = deviceAddress)
             }
         }
 
