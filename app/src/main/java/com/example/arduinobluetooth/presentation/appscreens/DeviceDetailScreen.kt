@@ -61,7 +61,8 @@ fun DeviceDetailScreen(
     val connectionState by blueViewModel.connectionState.collectAsState()
     val loginUIState = loginViewModel.uiState.collectAsState()
 
-
+    val scope = rememberCoroutineScope()
+    val delayBeforeStopConnecting = 10000L
     val buttonDefaults = ButtonDefaults.buttonColors(
         containerColor = Color(context.resources.getColor(R.color.icure_green)),
         contentColor = Color.White
@@ -96,13 +97,19 @@ fun DeviceDetailScreen(
 
         when (connectionState) {
             BluetoothState.READY_TO_CONFIGURE -> {
-                Log.i("finishedConfiguring",loginUIState.value.finishedConfiguring.toString())
-                if(loginUIState.value.finishedConfiguring){
+                LaunchedEffect(key1 = false){
+                    loginViewModel.getDeviceConfigData()
+                }
+
+
+                Log.i("deviceDataReady",loginUIState.value.deviceDataReady.toString())
+                if(loginUIState.value.deviceDataReady){
                     device?.let{
                         val deviceConfigData = loginUIState.value.deviceConfigData
                         DeviceConfiguration(device,deviceConfigData,blueViewModel,buttonDefaults,connectionState)
                     }
                 }else{
+                    Text("Preparing device data ...")
                     Log.i("CONFIG", "Missing informations to configure the device")
                 }
 
@@ -128,7 +135,7 @@ fun DeviceDetailScreen(
             }
             else -> {
                 LaunchedEffect(Unit) {
-                    delay(10000)
+                    delay(delayBeforeStopConnecting)
                     unableToConnect = true
                 }
                 Box(
@@ -153,8 +160,8 @@ fun DeviceDetailScreen(
 @SuppressLint("MissingPermission")
 @Composable
 fun DeviceConfiguration(device:MyBluetoothDevice, deviceConfigData : BluetoothConfigData, blueViewModel: BluetoothViewModel, buttonDefaults: ButtonColors, connectionState : BluetoothState){
-    val icon = if(connectionState == BluetoothState.CONFIGURED) Icons.TwoTone.Check else Icons.TwoTone.Close
-    val iconColor = if(connectionState == BluetoothState.CONFIGURED) Color.Green else Color.Red
+    val icon = if(connectionState == BluetoothState.CONNECTED) Icons.TwoTone.Check else Icons.TwoTone.Close
+    val iconColor = if(connectionState == BluetoothState.CONNECTED) Color.Green else Color.Red
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -178,7 +185,7 @@ fun DeviceConfiguration(device:MyBluetoothDevice, deviceConfigData : BluetoothCo
 
                 Row(horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(text = "Device : ${deviceName}", style = h1)
-                    /*Icon(imageVector = icon, contentDescription = "lo", tint = iconColor)*/
+                    Icon(imageVector = icon, contentDescription = "lo", tint = iconColor)
 
                 }
 

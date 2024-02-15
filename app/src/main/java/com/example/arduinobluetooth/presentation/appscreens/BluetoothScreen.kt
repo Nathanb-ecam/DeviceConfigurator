@@ -32,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -49,14 +50,17 @@ import com.example.arduinobluetooth.data.MockBluetoothController
 import com.example.arduinobluetooth.h3
 import com.example.arduinobluetooth.pHint
 import com.example.arduinobluetooth.presentation.BluetoothViewModel
+import com.example.arduinobluetooth.presentation.LoginViewModel
 import com.example.arduinobluetooth.ui.theme.ArduinoBluetoothTheme
+import kotlinx.coroutines.launch
 
 
 @SuppressLint("MissingPermission")
 @Composable
 fun BluetoothScreen(
     navController : NavHostController,
-    blueViewModel : BluetoothViewModel = viewModel()
+    loginViewModel : LoginViewModel,
+    blueViewModel : BluetoothViewModel
 ){
 
 
@@ -64,12 +68,13 @@ fun BluetoothScreen(
 
 
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     val scannedDevices by blueViewModel.scannedDevices.collectAsState()
     val searchText by blueViewModel.searchText.collectAsState()
 
     blueViewModel.startScan(context = context)
-    blueViewModel.disconnectCurrentDevice()
+    /*blueViewModel.disconnectCurrentDevice()*/
 
 
     val buttonDefaults = ButtonDefaults.buttonColors(
@@ -212,9 +217,10 @@ fun BluetoothPreview() {
 
     val mockBluetoothController: IBluetoothController = MockBluetoothController()
     val blueViewModel = viewModel { BluetoothViewModel(mockBluetoothController) }
+    val loginViewModel = viewModel { LoginViewModel() }
 
     ArduinoBluetoothTheme {
-        BluetoothScreen(navController = navController, blueViewModel)
+        BluetoothScreen(navController = navController, loginViewModel ,blueViewModel)
     }
 }
 

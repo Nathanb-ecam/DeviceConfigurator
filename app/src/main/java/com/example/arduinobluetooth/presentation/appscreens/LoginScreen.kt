@@ -48,6 +48,7 @@ fun LoginScreen(
     val scope = rememberCoroutineScope()
 
 
+
     val textFieldColors = androidx.compose.material.TextFieldDefaults.outlinedTextFieldColors(
         leadingIconColor = Color(context.resources.getColor(R.color.icure_green)),
         focusedBorderColor = Color(context.resources.getColor(R.color.icure_green)),
@@ -63,9 +64,11 @@ fun LoginScreen(
 
 
 
-    LaunchedEffect(uiState.finishedConfiguring){
-        if (uiState.finishedConfiguring){
-            navController.navigate(Screen.BlueScreen.route)
+    LaunchedEffect(uiState.apiInitalized){
+        scope.launch {
+            if (uiState.apiInitalized){
+                navController.navigate(Screen.BlueScreen.route)
+            }
         }
     }
 
@@ -97,6 +100,7 @@ fun LoginScreen(
                     onValueChange = { username=it },
                     label = {Text("Nom d'utilisateur")},
                     textStyle = LocalTextStyle.current.copy(color = Color.Gray),
+                    maxLines = 1,
                     colors = textFieldColors,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -110,6 +114,7 @@ fun LoginScreen(
                     onValueChange = { password=it },
                     label = {Text("Mot de passe")},
                     textStyle = LocalTextStyle.current.copy(color = Color.Gray),
+                    maxLines = 1,
                     colors = textFieldColors,
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier
@@ -128,16 +133,10 @@ fun LoginScreen(
                         contentColor = Color.White
                     ),
                     onClick = {
-
                         scope.launch{
                             if(!uiState.apiInitalized){
-                                val logged = loginViewModel.apiInitialize(username, password)
-                                if (logged){
-                                    loginViewModel.getDeviceConfigData()
-                                }
+                                loginViewModel.apiInitialize(username, password)
                             }
-
-
                             /*navController.navigate(Screen.BlueScreen.route)*/
                         }
                         Log.i("Credentials","${username} ${password}")

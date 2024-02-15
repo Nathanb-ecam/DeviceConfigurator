@@ -28,8 +28,12 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
     private val adapter = bluetoothManager.adapter
 
     private var connectedGatt:BluetoothGatt? = null
+
     private val _connectionState = MutableStateFlow(BluetoothState.INIT)
     override val connectionState : StateFlow<BluetoothState> get() = _connectionState
+
+    private val _isScanning = MutableStateFlow(false)
+
 
     private val handler = Handler(Looper.getMainLooper())
 
@@ -66,13 +70,12 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
                 return
             }
 
-/*            Handler(Looper.getMainLooper()).postDelayed({
-                adapter.bluetoothLeScanner.stopScan(leScanCallback)
-            }, SCAN_PERIOD)*/
-
             try{
-                adapter.bluetoothLeScanner.startScan(leScanCallback)
-                startUpdating()
+                if(!_isScanning.value){
+                    adapter.bluetoothLeScanner.startScan(leScanCallback)
+                    _isScanning.value = true
+                    startUpdating()
+                }
             }catch(e: Exception){
                 Log.i("Exception",e.toString())
             }
@@ -86,7 +89,10 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
         }
 
         try{
-            adapter.bluetoothLeScanner.stopScan(leScanCallback)
+            if(_isScanning.value){
+                adapter.bluetoothLeScanner.stopScan(leScanCallback)
+                _isScanning.value = false
+            }
             Log.i("After scan", " Found ${_scannedDevices.value.size.toString()} devices")
 
         }
@@ -321,10 +327,6 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
 
 
     override fun connectDevice(device : BluetoothDevice){
-
-/*        if(connectedGatt?.device?.address != null){ // if user was already connected to another device, we disconnect the other first
-            connectedGatt = null
-        }*/
         try {
             device.connectGatt(context,false,gattCallback)
             Log.i("GATT", "Connecting to gatt")
@@ -339,6 +341,7 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
         connectedGatt?.let{gatt->
             try{
                 gatt.disconnect()
+
                 Log.i("GATT Device","Device disconnected")
             }catch(e:Error){
                 Log.i("ERROR", "Error while disconnecting device")
@@ -357,12 +360,12 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
                 connectedGatt = gatt
                 Log.i("STATE","Connected")
                 _connectionState.value = BluetoothState.CONNECTED
-                Handler(Looper.getMainLooper()).postDelayed({
+                gatt?.discoverServices()
+    /*            Handler(Looper.getMainLooper()).postDelayed({
                     gatt?.discoverServices()
-                }, 3500)
+                    gatt?.discoverServices()
+                }, 3500)*/
             }else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-
-                connectedGatt = null
                 if(_connectionState.value != BluetoothState.CONFIGURED){
                     Log.i("STATE","Disconnected")
                     _connectionState.value = BluetoothState.DISCONNECTED
