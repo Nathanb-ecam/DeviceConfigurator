@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity(){
                 val navController = rememberNavController()
                 bluetoothController = BluetoothControllerImpl(applicationContext)
                 blueViewModel  = viewModel{BluetoothViewModel(bluetoothController)}
-                loginViewModel  = viewModel{LoginViewModel()}
+                loginViewModel  = viewModel{LoginViewModel(applicationContext)}
 
 
                 val bottomNavItems = listOf(

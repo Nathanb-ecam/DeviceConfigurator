@@ -58,8 +58,15 @@ fun LoginScreen(
     )
 
 
-    var username by rememberSaveable() { mutableStateOf("18092@ecam.be") }
-    var password by rememberSaveable() { mutableStateOf("77811dcf-1846-4ce4-89c4-cffcdc822657") }
+
+    val uidPlaceholder = context.getString(R.string.uid)
+    val tokenPlaceholder =context.getString(R.string.user_token)
+    /*val apiUrl = context.getString(R.string.icure_api_url)*/
+    val localApiUrl = context.getString(R.string.icure_local_url)
+
+    var username by rememberSaveable() { mutableStateOf(uidPlaceholder) }
+    var password by rememberSaveable() { mutableStateOf(tokenPlaceholder) }
+
     val uiState by loginViewModel.uiState.collectAsState()
 
 
@@ -135,7 +142,7 @@ fun LoginScreen(
                     onClick = {
                         scope.launch{
                             if(!uiState.apiInitalized){
-                                loginViewModel.apiInitialize(username, password)
+                                loginViewModel.apiInitialize(localApiUrl,username, password)
                             }
                             /*navController.navigate(Screen.BlueScreen.route)*/
                         }
@@ -155,10 +162,10 @@ fun LoginScreen(
 @Preview(showBackground = true)
 @Composable
 fun LoginPreview() {
-
+    val context = LocalContext.current
     ArduinoBluetoothTheme {
         val navController = rememberNavController()
-        val loginViewModel = viewModel{LoginViewModel()}
+        val loginViewModel = viewModel{LoginViewModel(context)}
 
         LoginScreen(navController = navController,loginViewModel = loginViewModel)
 

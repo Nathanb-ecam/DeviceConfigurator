@@ -100,8 +100,8 @@ class BluetoothViewModel (
     }
 
 
-    fun connectDevice(device : BluetoothDevice){
-        bluetoothController.connectDevice(device)
+    fun connectDevice(deviceAddress :String){
+        bluetoothController.connectDevice(deviceAddress)
     }
 
     fun disconnectCurrentDevice(){

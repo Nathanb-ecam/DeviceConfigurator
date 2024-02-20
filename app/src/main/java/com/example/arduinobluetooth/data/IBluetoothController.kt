@@ -16,7 +16,7 @@ interface IBluetoothController  {
 
     fun deleteSearchResults()
 
-    fun connectDevice(device : BluetoothDevice)
+    fun connectDevice(deviceAdress : String)
 
     fun testDeviceConnection()
 

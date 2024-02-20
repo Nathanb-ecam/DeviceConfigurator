@@ -2,6 +2,8 @@ package com.example.arduinobluetooth.presentation.appscreens
 
 
 import android.annotation.SuppressLint
+import android.os.Handler
+import android.os.Looper
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -74,7 +76,7 @@ fun BluetoothScreen(
     val searchText by blueViewModel.searchText.collectAsState()
 
     blueViewModel.startScan(context = context)
-    /*blueViewModel.disconnectCurrentDevice()*/
+    blueViewModel.disconnectCurrentDevice()
 
 
     val buttonDefaults = ButtonDefaults.buttonColors(
@@ -153,9 +155,12 @@ fun BluetoothScreen(
                             //.padding(horizontal = 12.dp, vertical = 4.dp)
                             .height(65.dp)
                             .clickable {
-                                blueViewModel.stopScan(context = context)
-                                blueViewModel.connectDevice(myDevice.toBluetoothDevice())
-                                navController.navigate(Screen.DeviceDetailScreen.withArgs(myDevice.address))
+                                /*blueViewModel.stopScan(context = context)*/
+                                Handler(Looper.getMainLooper()).postDelayed({
+                                    blueViewModel.connectDevice(myDevice.address)
+                                    navController.navigate(Screen.DeviceDetailScreen.withArgs(myDevice.address))
+                                }, 500)
+
                             }
                     ){
 
@@ -214,10 +219,11 @@ fun BluetoothScreen(
 fun BluetoothPreview() {
 
     val navController = rememberNavController()
+    val context = LocalContext.current
 
     val mockBluetoothController: IBluetoothController = MockBluetoothController()
     val blueViewModel = viewModel { BluetoothViewModel(mockBluetoothController) }
-    val loginViewModel = viewModel { LoginViewModel() }
+    val loginViewModel = viewModel { LoginViewModel(context) }
 
     ArduinoBluetoothTheme {
         BluetoothScreen(navController = navController, loginViewModel ,blueViewModel)

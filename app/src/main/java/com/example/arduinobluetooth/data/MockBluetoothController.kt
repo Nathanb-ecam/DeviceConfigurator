@@ -45,7 +45,7 @@ class MockBluetoothController : IBluetoothController {
         TODO("Not yet implemented")
     }
 
-    override fun connectDevice(device: BluetoothDevice) {
+    override fun connectDevice(deviceAddress: String) {
         TODO("Not yet implemented")
     }
 

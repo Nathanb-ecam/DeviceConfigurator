@@ -58,7 +58,7 @@ fun Navigation(navController : NavHostController, bluetoothViewModel: BluetoothV
 
         composable(route = Screen.HelpScreen.route) {
             ScreenScaffolder(navController = navController, bottomNavItems = bottomNavItems) {
-                HelpScreen(navController = navController)
+                HelpScreen(navController = navController,loginViewModel = loginViewModel)
             }
         }
 

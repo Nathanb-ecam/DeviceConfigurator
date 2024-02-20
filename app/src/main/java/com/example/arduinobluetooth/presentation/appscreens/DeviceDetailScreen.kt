@@ -62,7 +62,7 @@ fun DeviceDetailScreen(
     val loginUIState = loginViewModel.uiState.collectAsState()
 
     val scope = rememberCoroutineScope()
-    val delayBeforeStopConnecting = 10000L
+    val delayBeforeStopConnecting = 15000L
     val buttonDefaults = ButtonDefaults.buttonColors(
         containerColor = Color(context.resources.getColor(R.color.icure_green)),
         contentColor = Color.White
@@ -79,8 +79,8 @@ fun DeviceDetailScreen(
         if(unableToConnect){
             Popup(
                 buttonColors = buttonDefaults,
-                alertTitle = "Unable to connect",
-                buttonText ="Close",
+                alertTitle = "Impossible de se connecter",
+                buttonText ="Fermer",
                 onPopupClose = {
                     navController.navigate(Screen.BlueScreen.route)
                                },
@@ -109,7 +109,7 @@ fun DeviceDetailScreen(
                         DeviceConfiguration(device,deviceConfigData,blueViewModel,buttonDefaults,connectionState)
                     }
                 }else{
-                    Text("Preparing device data ...")
+                    Text("Creation du contact ...")
                     Log.i("CONFIG", "Missing informations to configure the device")
                 }
 
@@ -117,8 +117,8 @@ fun DeviceDetailScreen(
             BluetoothState.CONFIGURED -> {
                 Popup(
                     buttonColors = buttonDefaults,
-                    alertTitle = "Device successfully configured",
-                    buttonText = "Close",
+                    alertTitle = "Configuration réussie",
+                    buttonText = "Fermer",
                     onPopupClose = {
                         blueViewModel.updateConnectionState(BluetoothState.DISCONNECTED)
                         navController.navigate(Screen.BlueScreen.route)
@@ -202,7 +202,7 @@ fun DeviceConfiguration(device:MyBluetoothDevice, deviceConfigData : BluetoothCo
                         .fillMaxWidth()
                         /*.padding(vertical = 8.dp)*/
                 ) {
-                    Text(text = "Toggle builtin led")
+                    Text(text = "Identifier l'appareil")
                 }
                 Button(
                     onClick = {
@@ -213,7 +213,7 @@ fun DeviceConfiguration(device:MyBluetoothDevice, deviceConfigData : BluetoothCo
                         .fillMaxWidth()
                         /*.padding(vertical = 8.dp)*/
                 ) {
-                    Text(text = "Configure")
+                    Text(text = "Configurer")
                 }
             }
         }
