@@ -47,14 +47,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.arduinobluetooth.R
 import com.example.arduinobluetooth.Screen
-import com.example.arduinobluetooth.data.IBluetoothController
-import com.example.arduinobluetooth.data.MockBluetoothController
-import com.example.arduinobluetooth.h3
-import com.example.arduinobluetooth.pHint
-import com.example.arduinobluetooth.presentation.BluetoothViewModel
-import com.example.arduinobluetooth.presentation.LoginViewModel
+import com.example.arduinobluetooth.data.Bluetooth.IBluetoothController
+import com.example.arduinobluetooth.data.Bluetooth.MockBluetoothController
+import com.example.arduinobluetooth.presentation.uiComponents.h3
+import com.example.arduinobluetooth.presentation.uiComponents.pHint
+import com.example.arduinobluetooth.presentation.viewmodels.BluetoothViewModel
+import com.example.arduinobluetooth.presentation.viewmodels.LoginViewModel
 import com.example.arduinobluetooth.ui.theme.ArduinoBluetoothTheme
-import kotlinx.coroutines.launch
+import com.example.arduinobluetooth.utils.BluetoothState
 
 
 @SuppressLint("MissingPermission")
@@ -221,7 +221,7 @@ fun BluetoothPreview() {
     val navController = rememberNavController()
     val context = LocalContext.current
 
-    val mockBluetoothController: IBluetoothController = MockBluetoothController()
+    val mockBluetoothController : IBluetoothController = MockBluetoothController(BluetoothState.READY_TO_CONFIGURE)
     val blueViewModel = viewModel { BluetoothViewModel(mockBluetoothController) }
     val loginViewModel = viewModel { LoginViewModel(context) }
 

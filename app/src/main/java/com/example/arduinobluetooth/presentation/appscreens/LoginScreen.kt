@@ -27,11 +27,8 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.arduinobluetooth.R
 import com.example.arduinobluetooth.Screen
-import com.example.arduinobluetooth.presentation.BluetoothViewModel
-import com.example.arduinobluetooth.presentation.LoginViewModel
+import com.example.arduinobluetooth.presentation.viewmodels.LoginViewModel
 import com.example.arduinobluetooth.ui.theme.ArduinoBluetoothTheme
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 
@@ -165,7 +162,7 @@ fun LoginPreview() {
     val context = LocalContext.current
     ArduinoBluetoothTheme {
         val navController = rememberNavController()
-        val loginViewModel = viewModel{LoginViewModel(context)}
+        val loginViewModel = viewModel{ LoginViewModel(context) }
 
         LoginScreen(navController = navController,loginViewModel = loginViewModel)
 

@@ -1,6 +1,5 @@
-package com.example.arduinobluetooth.data
+package com.example.arduinobluetooth.data.Bluetooth
 
-import android.bluetooth.BluetoothDevice
 import android.content.Context
 import com.example.arduinobluetooth.utils.BluetoothState
 import kotlinx.coroutines.flow.StateFlow

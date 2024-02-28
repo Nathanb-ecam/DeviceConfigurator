@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavArgument
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -22,15 +21,17 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.example.arduinobluetooth.R
 import com.example.arduinobluetooth.Screen
-import com.example.arduinobluetooth.data.BottomNavItem
+import com.example.arduinobluetooth.data.Bluetooth.BottomNavItem
 import com.example.arduinobluetooth.presentation.appscreens.BluetoothScreen
 import com.example.arduinobluetooth.presentation.appscreens.DeviceDetailScreen
 import com.example.arduinobluetooth.presentation.appscreens.HelpScreen
 import com.example.arduinobluetooth.presentation.appscreens.LoginScreen
+import com.example.arduinobluetooth.presentation.viewmodels.BluetoothViewModel
+import com.example.arduinobluetooth.presentation.viewmodels.LoginViewModel
 
 
 @Composable
-fun Navigation(navController : NavHostController, bluetoothViewModel: BluetoothViewModel, loginViewModel: LoginViewModel,bottomNavItems : List<BottomNavItem>){
+fun Navigation(navController : NavHostController, bluetoothViewModel: BluetoothViewModel, loginViewModel: LoginViewModel, bottomNavItems : List<BottomNavItem>){
     NavHost(navController = navController, startDestination = Screen.LoginScreen.route) {
         composable(route = Screen.LoginScreen.route) {
             LoginScreen(navController = navController,loginViewModel = loginViewModel)

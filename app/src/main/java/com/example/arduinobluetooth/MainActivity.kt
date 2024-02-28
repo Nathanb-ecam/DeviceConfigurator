@@ -13,10 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
-import com.example.arduinobluetooth.data.BluetoothControllerImpl
-import com.example.arduinobluetooth.data.BottomNavItem
-import com.example.arduinobluetooth.presentation.BluetoothViewModel
-import com.example.arduinobluetooth.presentation.LoginViewModel
+import com.example.arduinobluetooth.data.Bluetooth.BluetoothControllerImpl
+import com.example.arduinobluetooth.data.Bluetooth.BottomNavItem
+import com.example.arduinobluetooth.presentation.viewmodels.BluetoothViewModel
+import com.example.arduinobluetooth.presentation.viewmodels.LoginViewModel
 import com.example.arduinobluetooth.presentation.Navigation
 import com.example.arduinobluetooth.ui.theme.ArduinoBluetoothTheme
 import com.example.arduinobluetooth.utils.BLEPermissions
@@ -42,8 +42,8 @@ class MainActivity : ComponentActivity(){
             ArduinoBluetoothTheme {
                 val navController = rememberNavController()
                 bluetoothController = BluetoothControllerImpl(applicationContext)
-                blueViewModel  = viewModel{BluetoothViewModel(bluetoothController)}
-                loginViewModel  = viewModel{LoginViewModel(applicationContext)}
+                blueViewModel  = viewModel{ BluetoothViewModel(bluetoothController) }
+                loginViewModel  = viewModel{ LoginViewModel(applicationContext) }
 
 
                 val bottomNavItems = listOf(

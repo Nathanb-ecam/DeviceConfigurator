@@ -1,13 +1,12 @@
-package com.example.arduinobluetooth.presentation
+package com.example.arduinobluetooth.presentation.viewmodels
 
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothDevice
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.arduinobluetooth.data.BluetoothConfigData
-import com.example.arduinobluetooth.data.IBluetoothController
-import com.example.arduinobluetooth.data.MyBluetoothDevice
+import com.example.arduinobluetooth.data.Bluetooth.BluetoothConfigData
+import com.example.arduinobluetooth.data.Bluetooth.IBluetoothController
+import com.example.arduinobluetooth.data.Bluetooth.MyBluetoothDevice
 import com.example.arduinobluetooth.utils.BluetoothState
 
 

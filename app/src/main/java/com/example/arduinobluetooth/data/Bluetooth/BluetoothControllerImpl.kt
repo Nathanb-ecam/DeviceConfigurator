@@ -1,4 +1,4 @@
-package com.example.arduinobluetooth.data
+package com.example.arduinobluetooth.data.Bluetooth
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
@@ -24,7 +24,7 @@ import com.example.arduinobluetooth.utils.Crypto
 
 
 @SuppressLint("MissingPermission")
-class BluetoothControllerImpl(private val context : Context) : IBluetoothController{
+class BluetoothControllerImpl(private val context : Context) : IBluetoothController {
     private val bluetoothManager = context.getSystemService(BluetoothManager::class.java)
     private val adapter = bluetoothManager.adapter
 
@@ -148,7 +148,7 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
         _scannedDevices.value = updatedList
     }
 
-    fun BluetoothDevice.toMyBluetoothDevice(rssi : Int):MyBluetoothDevice{
+    fun BluetoothDevice.toMyBluetoothDevice(rssi : Int): MyBluetoothDevice {
         return MyBluetoothDevice(
             name = this.name ?: "Unknown",
             address = this.address,

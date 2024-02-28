@@ -1,12 +1,13 @@
-package com.example.arduinobluetooth.data
+package com.example.arduinobluetooth.data.Bluetooth
 
-import android.bluetooth.BluetoothDevice
 import android.content.Context
+import android.util.Log
 import com.example.arduinobluetooth.utils.BluetoothState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
-class MockBluetoothController : IBluetoothController {
+class MockBluetoothController(val bluetoothState: BluetoothState) : IBluetoothController {
 
     private val _scannedDevices = MutableStateFlow<List<MyBluetoothDevice>>(emptyList())
 
@@ -20,45 +21,46 @@ class MockBluetoothController : IBluetoothController {
             MyBluetoothDevice("Mock-Headphones","0F-78-DA-3E", -70)
         )
         _scannedDevices.value = mockDevices
-        _connectionState.value = BluetoothState.CONNECTED
+        _connectionState.value = bluetoothState
 
     }
 
     override val connectionState: StateFlow<BluetoothState>
-        get() = TODO("Not yet implemented")
+        get() = _connectionState.asStateFlow()
     override val scannedDevices: StateFlow<List<MyBluetoothDevice>>
-        get() = TODO("Not yet implemented")
+        get() = _scannedDevices.asStateFlow()
 
     override fun scanLeDevice(context: Context) {
-        TODO("Not yet implemented")
+        Log.i("MOCK","N")
     }
 
     override fun stopScanLeDevice(context: Context) {
-        TODO("Not yet implemented")
+        Log.i("MOCK","N")
     }
 
     override fun disconnectDevice() {
-        TODO("Not yet implemented")
+        Log.i("MOCK","N")
     }
 
     override fun deleteSearchResults() {
-        TODO("Not yet implemented")
+        Log.i("MOCK","N")
     }
 
     override fun connectDevice(deviceAddress: String) {
-        TODO("Not yet implemented")
+
+        Log.i("MOCK","N")
     }
 
     override fun testDeviceConnection() {
-        TODO("Not yet implemented")
+        Log.i("MOCK","N")
     }
 
     override fun configureArduinoDevice(configData: BluetoothConfigData) {
-        TODO("Not yet implemented")
+        Log.i("MOCK","N")
     }
 
     override fun updateConnectedState(state: BluetoothState) {
-        TODO("Not yet implemented")
+        Log.i("MOCK","N")
     }
 
 }

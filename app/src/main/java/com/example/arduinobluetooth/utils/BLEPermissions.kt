@@ -10,7 +10,6 @@ import com.example.arduinobluetooth.MainActivity
 
 class BLEPermissions(private val activity : MainActivity) {
 
-
     private val permissionLauncher: ActivityResultLauncher<Array<String>> =
         activity.registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             handlePermissionsResult(permissions)

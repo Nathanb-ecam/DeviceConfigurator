@@ -3,12 +3,9 @@ package com.example.arduinobluetooth.presentation.appscreens
 
 
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothDevice
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.AlertDialog
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
@@ -25,26 +22,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.arduinobluetooth.R
 import com.example.arduinobluetooth.Screen
-import com.example.arduinobluetooth.data.BluetoothConfigData
-import com.example.arduinobluetooth.data.MyBluetoothDevice
-import com.example.arduinobluetooth.h1
-import com.example.arduinobluetooth.h3
-import com.example.arduinobluetooth.p
-import com.example.arduinobluetooth.pHint
-import com.example.arduinobluetooth.presentation.BluetoothViewModel
-import com.example.arduinobluetooth.presentation.LoginViewModel
+import com.example.arduinobluetooth.data.Bluetooth.BluetoothConfigData
+import com.example.arduinobluetooth.data.Bluetooth.MockBluetoothController
+import com.example.arduinobluetooth.data.Bluetooth.MyBluetoothDevice
+import com.example.arduinobluetooth.presentation.uiComponents.h1
+import com.example.arduinobluetooth.presentation.uiComponents.h3
+import com.example.arduinobluetooth.presentation.viewmodels.BluetoothViewModel
+import com.example.arduinobluetooth.presentation.viewmodels.LoginViewModel
 import com.example.arduinobluetooth.presentation.uiComponents.Popup
+import com.example.arduinobluetooth.presentation.viewmodels.ILoginViewModel
+import com.example.arduinobluetooth.presentation.viewmodels.MockLoginViewModel
+import com.example.arduinobluetooth.ui.theme.ArduinoBluetoothTheme
 import com.example.arduinobluetooth.utils.BluetoothState
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 
 
 @SuppressLint("MissingPermission")
@@ -52,12 +49,12 @@ import kotlinx.coroutines.launch
 fun DeviceDetailScreen(
     navController: NavController,
     blueViewModel : BluetoothViewModel,
-    loginViewModel: LoginViewModel,
-    deviceAddress : String?,
+    loginViewModel: ILoginViewModel,
+    deviceAddress : String? ,
     ) {
 
     val context = LocalContext.current
-    val device = blueViewModel.getDeviceByAddress(deviceAddress)
+    val device = blueViewModel.getDeviceByAddress(deviceAddress) ?: MyBluetoothDevice("Mock","AA:BB:CC:DD",37)
     val connectionState by blueViewModel.connectionState.collectAsState()
     val loginUIState = loginViewModel.uiState.collectAsState()
 
@@ -100,7 +97,6 @@ fun DeviceDetailScreen(
                 LaunchedEffect(key1 = false){
                     loginViewModel.getDeviceConfigData()
                 }
-
 
                 Log.i("deviceDataReady",loginUIState.value.deviceDataReady.toString())
                 if(loginUIState.value.deviceDataReady){
@@ -159,7 +155,7 @@ fun DeviceDetailScreen(
 
 @SuppressLint("MissingPermission")
 @Composable
-fun DeviceConfiguration(device:MyBluetoothDevice, deviceConfigData : BluetoothConfigData, blueViewModel: BluetoothViewModel, buttonDefaults: ButtonColors, connectionState : BluetoothState){
+fun DeviceConfiguration(device: MyBluetoothDevice, deviceConfigData : BluetoothConfigData, blueViewModel: BluetoothViewModel, buttonDefaults: ButtonColors, connectionState : BluetoothState){
     val icon = if(connectionState == BluetoothState.CONNECTED) Icons.TwoTone.Check else Icons.TwoTone.Close
     val iconColor = if(connectionState == BluetoothState.CONNECTED) Color.Green else Color.Red
     Box(
@@ -224,5 +220,28 @@ fun DeviceConfiguration(device:MyBluetoothDevice, deviceConfigData : BluetoothCo
 
 
 
+
+@Preview(showBackground = true)
+@Composable
+fun DeviceDetailPreview() {
+    val context = LocalContext.current
+    ArduinoBluetoothTheme {
+        val mockBluetoothController = MockBluetoothController(BluetoothState.READY_TO_CONFIGURE)
+        val navController = rememberNavController()
+
+        val mockLoginViewModel  = viewModel{ MockLoginViewModel() }
+        val blueViewModel = viewModel { BluetoothViewModel(mockBluetoothController) }
+
+
+        DeviceDetailScreen(
+            navController = navController,
+            blueViewModel = blueViewModel,
+            loginViewModel = mockLoginViewModel,
+            deviceAddress = "E0:5A:1B:E3:6F:AE"
+        )
+
+
+    }
+}
 
 

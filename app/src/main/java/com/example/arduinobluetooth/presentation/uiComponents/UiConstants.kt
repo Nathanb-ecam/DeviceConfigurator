@@ -1,4 +1,4 @@
-package com.example.arduinobluetooth
+package com.example.arduinobluetooth.presentation.uiComponents
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle

@@ -1,4 +1,4 @@
-package com.example.arduinobluetooth.data
+package com.example.arduinobluetooth.data.Bluetooth
 
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
