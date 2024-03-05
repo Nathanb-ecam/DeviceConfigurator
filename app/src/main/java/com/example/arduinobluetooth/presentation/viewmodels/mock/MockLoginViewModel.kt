@@ -1,9 +1,10 @@
-package com.example.arduinobluetooth.presentation.viewmodels
+package com.example.arduinobluetooth.presentation.viewmodels.mock
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.arduinobluetooth.data.Bluetooth.BluetoothConfigData
-import com.example.arduinobluetooth.data.Bluetooth.MyBluetoothDevice
+import com.example.arduinobluetooth.presentation.viewmodels.ILoginViewModel
+import com.example.arduinobluetooth.presentation.viewmodels.LoginUIState
 import com.icure.sdk.model.Contact
 import com.icure.sdk.model.Patient
 import kotlinx.coroutines.flow.MutableStateFlow

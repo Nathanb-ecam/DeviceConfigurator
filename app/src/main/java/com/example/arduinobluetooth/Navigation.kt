@@ -22,16 +22,19 @@ import androidx.navigation.navArgument
 import com.example.arduinobluetooth.R
 import com.example.arduinobluetooth.Screen
 import com.example.arduinobluetooth.data.Bluetooth.BottomNavItem
+import com.example.arduinobluetooth.data.Bluetooth.Mqtt.ILiveData
 import com.example.arduinobluetooth.presentation.appscreens.BluetoothScreen
 import com.example.arduinobluetooth.presentation.appscreens.DeviceDetailScreen
+import com.example.arduinobluetooth.presentation.appscreens.DeviceLiveDataScreen
 import com.example.arduinobluetooth.presentation.appscreens.HelpScreen
 import com.example.arduinobluetooth.presentation.appscreens.LoginScreen
 import com.example.arduinobluetooth.presentation.viewmodels.BluetoothViewModel
+import com.example.arduinobluetooth.presentation.viewmodels.LiveDataViewModel
 import com.example.arduinobluetooth.presentation.viewmodels.LoginViewModel
 
 
 @Composable
-fun Navigation(navController : NavHostController, bluetoothViewModel: BluetoothViewModel, loginViewModel: LoginViewModel, bottomNavItems : List<BottomNavItem>){
+fun Navigation(navController : NavHostController, bluetoothViewModel: BluetoothViewModel,liveDataViewModel: LiveDataViewModel, loginViewModel: LoginViewModel, bottomNavItems : List<BottomNavItem>){
     NavHost(navController = navController, startDestination = Screen.LoginScreen.route) {
         composable(route = Screen.LoginScreen.route) {
             LoginScreen(navController = navController,loginViewModel = loginViewModel)
@@ -54,6 +57,15 @@ fun Navigation(navController : NavHostController, bluetoothViewModel: BluetoothV
             val deviceAddress = it.arguments?.getString("deviceAddress")
             ScreenScaffolder(navController = navController, bottomNavItems = bottomNavItems) {
                 DeviceDetailScreen(navController = navController,blueViewModel = bluetoothViewModel,loginViewModel = loginViewModel, deviceAddress = deviceAddress)
+            }
+        }
+
+        composable(route = Screen.DeviceLiveDataScreen.route) {
+            ScreenScaffolder(navController = navController, bottomNavItems = bottomNavItems) {
+                DeviceLiveDataScreen(
+                    navController = navController,
+                    liveDataViewModel = liveDataViewModel as ILiveData
+                )
             }
         }
 

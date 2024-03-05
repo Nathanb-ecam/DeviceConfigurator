@@ -35,10 +35,9 @@ import com.example.arduinobluetooth.data.Bluetooth.MyBluetoothDevice
 import com.example.arduinobluetooth.presentation.uiComponents.h1
 import com.example.arduinobluetooth.presentation.uiComponents.h3
 import com.example.arduinobluetooth.presentation.viewmodels.BluetoothViewModel
-import com.example.arduinobluetooth.presentation.viewmodels.LoginViewModel
 import com.example.arduinobluetooth.presentation.uiComponents.Popup
 import com.example.arduinobluetooth.presentation.viewmodels.ILoginViewModel
-import com.example.arduinobluetooth.presentation.viewmodels.MockLoginViewModel
+import com.example.arduinobluetooth.presentation.viewmodels.mock.MockLoginViewModel
 import com.example.arduinobluetooth.ui.theme.ArduinoBluetoothTheme
 import com.example.arduinobluetooth.utils.BluetoothState
 import kotlinx.coroutines.delay

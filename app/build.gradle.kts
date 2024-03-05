@@ -68,6 +68,13 @@ dependencies {
     implementation("com.icure:icure-sdk:0.0.3")
     implementation("com.icure:kryptom:0.0.3")
 
+    implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
+    implementation("org.eclipse.paho:org.eclipse.paho.android.service:1.1.1")
+    implementation("androidx.localbroadcastmanager:localbroadcastmanager:1.0.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.13.0")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.0")
+
+
 
     testImplementation("junit:junit:4.13.2")
 
@@ -75,6 +82,8 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation(platform("androidx.compose:compose-bom:2023.08.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+
+
 
 
     debugImplementation("androidx.compose.ui:ui-tooling")

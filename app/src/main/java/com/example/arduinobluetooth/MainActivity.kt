@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.List
 import androidx.compose.material3.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -15,18 +16,24 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
 import com.example.arduinobluetooth.data.Bluetooth.BluetoothControllerImpl
 import com.example.arduinobluetooth.data.Bluetooth.BottomNavItem
+import com.example.arduinobluetooth.data.Bluetooth.Mqtt.MqttController
 import com.example.arduinobluetooth.presentation.viewmodels.BluetoothViewModel
 import com.example.arduinobluetooth.presentation.viewmodels.LoginViewModel
 import com.example.arduinobluetooth.presentation.Navigation
+import com.example.arduinobluetooth.presentation.viewmodels.LiveDataViewModel
 import com.example.arduinobluetooth.ui.theme.ArduinoBluetoothTheme
 import com.example.arduinobluetooth.utils.BLEPermissions
 
 
 class MainActivity : ComponentActivity(){
     private lateinit var blePermissions: BLEPermissions
+
     private lateinit var bluetoothController : BluetoothControllerImpl
+    private lateinit var mqttController : MqttController
+
     private lateinit var blueViewModel : BluetoothViewModel
     private lateinit var loginViewModel: LoginViewModel
+    private lateinit var liveDataViewModel: LiveDataViewModel
 
 
 
@@ -42,8 +49,10 @@ class MainActivity : ComponentActivity(){
             ArduinoBluetoothTheme {
                 val navController = rememberNavController()
                 bluetoothController = BluetoothControllerImpl(applicationContext)
+                mqttController = MqttController(applicationContext)
                 blueViewModel  = viewModel{ BluetoothViewModel(bluetoothController) }
                 loginViewModel  = viewModel{ LoginViewModel(applicationContext) }
+                liveDataViewModel  = viewModel{ LiveDataViewModel(applicationContext,mqttController) }
 
 
                 val bottomNavItems = listOf(
@@ -53,7 +62,12 @@ class MainActivity : ComponentActivity(){
                         icon = Icons.Default.Search
                     ),
                     BottomNavItem(
-                        name="Item's",
+                        name="Live data",
+                        route = Screen.DeviceLiveDataScreen.route,
+                        icon = Icons.Outlined.List
+                    ),
+                    BottomNavItem(
+                        name="Help",
                         route = Screen.HelpScreen.route,
                         icon = Icons.Default.Settings
                     ),
@@ -66,6 +80,7 @@ class MainActivity : ComponentActivity(){
                     Navigation(
                         navController=navController,
                         bluetoothViewModel = blueViewModel,
+                        liveDataViewModel = liveDataViewModel,
                         loginViewModel = loginViewModel,
                         bottomNavItems = bottomNavItems
                     )

@@ -1,0 +1,56 @@
+package com.example.arduinobluetooth.presentation.viewmodels.mock
+
+import android.util.Log
+import androidx.compose.runtime.mutableStateOf
+import com.example.arduinobluetooth.data.Bluetooth.Mqtt.Content
+import com.example.arduinobluetooth.data.Bluetooth.Mqtt.ILiveData
+import com.example.arduinobluetooth.data.Bluetooth.Mqtt.LiveSession
+import com.example.arduinobluetooth.data.Bluetooth.Mqtt.MeasureDetails
+
+import com.example.arduinobluetooth.data.Bluetooth.Mqtt.MeasureValue
+import com.example.arduinobluetooth.data.Bluetooth.Mqtt.SensorDataContent
+import kotlinx.coroutines.flow.MutableStateFlow
+
+class MockLiveDataViewModel : ILiveData {
+    companion object INFO {
+        const val TAG = "Mock Live Data ViewModel"
+    }
+
+    override val liveData: MutableStateFlow<LiveSession> = MutableStateFlow(createMockLiveSession())
+
+
+
+    fun createMockLiveSession(): LiveSession {
+        return LiveSession(
+            connected = true,
+            subscribed = true,
+            liveSensorData = mutableListOf(
+                SensorDataContent(Content(MeasureValue(MeasureDetails("22","°C","temperature")))),
+                SensorDataContent(Content(MeasureValue(MeasureDetails("21.8","°C","temperature")))),
+                SensorDataContent(Content(MeasureValue(MeasureDetails("21.6","°C","temperature")))),
+                SensorDataContent(Content(MeasureValue(MeasureDetails("21.3","°C","temperature")))),
+                SensorDataContent(Content(MeasureValue(MeasureDetails("20.9","°C","temperature"))))
+            )
+        )
+    }
+
+
+    override fun setupMqtt() {
+        Log.i(TAG,"setup Mqtt")
+    }
+
+
+    override fun closeMqttConnection(){
+        Log.i(TAG,"closeMqttConnection")
+    }
+    override fun subscribe() {
+        Log.i(TAG,"subscribing")
+    }
+
+    override fun unsubscribe() {
+        Log.i(TAG,"unsubscribing")
+    }
+
+
+
+}
