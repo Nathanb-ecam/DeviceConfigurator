@@ -14,6 +14,7 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttException
 import org.eclipse.paho.client.mqttv3.MqttMessage
 import java.io.FileInputStream
+import java.io.InputStream
 import java.security.KeyStore
 import java.security.cert.CertificateFactory
 import javax.net.ssl.SSLContext
@@ -22,11 +23,11 @@ import javax.net.ssl.TrustManagerFactory
 
 interface IMqttController {
         val rtData : StateFlow<LiveSession>
-        fun createSSLSocketFactory(caCertPath: String): SSLSocketFactory
+        fun createSSLSocketFactory(cert : InputStream): SSLSocketFactory
         fun getMqttClientOptions() : MqttConnectOptions
 
         fun setupMqtt()
-        fun createMqttClient(context: Context, brokerURL : String, clientId : String ="kotlin_client" ) : MqttAndroidClient?
+        fun createMqttClient(context: Context, brokerURL : String, clientId : String ) : MqttAndroidClient?
 
         fun connectBroker(mqttClient: MqttAndroidClient?,options : MqttConnectOptions)
         fun subscribe(topic: String, qos: Int = 1)

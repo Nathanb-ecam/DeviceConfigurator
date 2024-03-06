@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.arduinobluetooth.R
 import com.example.arduinobluetooth.data.Bluetooth.BluetoothConfigData
+import com.example.arduinobluetooth.interfaces.ILoginViewModel
 import com.icure.kryptom.crypto.RsaAlgorithm
 import com.icure.kryptom.crypto.defaultCryptoService
 import com.icure.kryptom.utils.hexToByteArray
@@ -184,19 +185,10 @@ class LoginViewModel(
     override suspend fun testDecryption(){
         icureApi?.let {
             try {
-                val retrievedContact1 = icureApi!!.contact.getAndDecrypt(context.getString(R.string.cidToTestDecrypt1))
-                /*val retrievedContact2 = icureApi!!.contact.getAndDecrypt(context.getString(R.string.cidToTestDecrypt2))
-                val retrievedContact3 = icureApi!!.contact.getAndDecrypt(context.getString(R.string.cidToTestDecrypt3))
-                val retrievedContact4 = icureApi!!.contact.getAndDecrypt(context.getString(R.string.cidToTestDecrypt4))*/
+                val retrievedContact1 = icureApi!!.contact.getAndDecrypt(context.getString(R.string.cidToTestDecrypt))
 
                 Log.i("Test ",cid)
-
                 Log.i("Test Decryption",retrievedContact1.toString())
-/*                Log.i("Test Decryption",retrievedContact2.toString())
-                Log.i("Test Decryption",retrievedContact3.toString())
-                Log.i("Test Decryption",retrievedContact4.toString())*/
-
-
 
 
             }catch (e : Exception){

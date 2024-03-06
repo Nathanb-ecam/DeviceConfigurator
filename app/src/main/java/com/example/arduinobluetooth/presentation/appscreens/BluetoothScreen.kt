@@ -2,8 +2,6 @@ package com.example.arduinobluetooth.presentation.appscreens
 
 
 import android.annotation.SuppressLint
-import android.os.Handler
-import android.os.Looper
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -47,14 +45,14 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.arduinobluetooth.R
 import com.example.arduinobluetooth.Screen
-import com.example.arduinobluetooth.data.Bluetooth.IBluetoothController
+import com.example.arduinobluetooth.interfaces.IBluetoothController
 import com.example.arduinobluetooth.data.Bluetooth.MockBluetoothController
 import com.example.arduinobluetooth.presentation.uiComponents.h3
 import com.example.arduinobluetooth.presentation.uiComponents.pHint
 import com.example.arduinobluetooth.presentation.viewmodels.BluetoothViewModel
 import com.example.arduinobluetooth.presentation.viewmodels.LoginViewModel
 import com.example.arduinobluetooth.ui.theme.ArduinoBluetoothTheme
-import com.example.arduinobluetooth.utils.BluetoothState
+import com.example.arduinobluetooth.data.Bluetooth.BluetoothState
 
 
 @SuppressLint("MissingPermission")
@@ -99,8 +97,9 @@ fun BluetoothScreen(
 
     Column(
         modifier = Modifier
-            .fillMaxWidth()
+            /*.fillMaxWidth()*/
             .fillMaxHeight(0.92f)
+            /*.border(3.dp, Color.Blue)*/
             .background(Color(context.resources.getColor(R.color.icure_white))),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceAround
@@ -156,10 +155,12 @@ fun BluetoothScreen(
                             .height(65.dp)
                             .clickable {
                                 /*blueViewModel.stopScan(context = context)*/
-                                Handler(Looper.getMainLooper()).postDelayed({
+                                blueViewModel.connectDevice(myDevice.address)
+                                navController.navigate(Screen.DeviceDetailScreen.withArgs(myDevice.address))
+                       /*         Handler(Looper.getMainLooper()).postDelayed({
                                     blueViewModel.connectDevice(myDevice.address)
                                     navController.navigate(Screen.DeviceDetailScreen.withArgs(myDevice.address))
-                                }, 500)
+                                }, 500)*/
 
                             }
                     ){
@@ -179,11 +180,7 @@ fun BluetoothScreen(
                                 text = myDevice.rssi.toString().substring(1),
                                 style = h3, color = Color(context.resources.getColor(R.color.icure_green)),
                                 textAlign = TextAlign.Center,
-                                modifier = Modifier
-                                    .fillMaxSize()
-
                             )
-
                             //Icon(imageVector = Icons.Default.Clear, contentDescription = "lo")
                         }
 

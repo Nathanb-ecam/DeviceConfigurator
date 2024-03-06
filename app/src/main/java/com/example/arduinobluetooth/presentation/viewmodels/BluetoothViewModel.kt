@@ -5,9 +5,9 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.arduinobluetooth.data.Bluetooth.BluetoothConfigData
-import com.example.arduinobluetooth.data.Bluetooth.IBluetoothController
+import com.example.arduinobluetooth.interfaces.IBluetoothController
 import com.example.arduinobluetooth.data.Bluetooth.MyBluetoothDevice
-import com.example.arduinobluetooth.utils.BluetoothState
+import com.example.arduinobluetooth.data.Bluetooth.BluetoothState
 
 
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,7 +46,8 @@ class BluetoothViewModel (
 
 
 
-    val connectionState : StateFlow<BluetoothState> = bluetoothController.connectionState.stateIn(viewModelScope, SharingStarted.WhileSubscribed(),BluetoothState.DISCONNECTED)
+    val connectionState : StateFlow<BluetoothState> = bluetoothController.connectionState.stateIn(viewModelScope, SharingStarted.WhileSubscribed(),
+        BluetoothState.DISCONNECTED)
 
     init {
         // Observe the scannedDevicesFlow from the BluetoothController

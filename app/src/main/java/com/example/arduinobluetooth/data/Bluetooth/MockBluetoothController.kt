@@ -2,7 +2,7 @@ package com.example.arduinobluetooth.data.Bluetooth
 
 import android.content.Context
 import android.util.Log
-import com.example.arduinobluetooth.utils.BluetoothState
+import com.example.arduinobluetooth.interfaces.IBluetoothController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

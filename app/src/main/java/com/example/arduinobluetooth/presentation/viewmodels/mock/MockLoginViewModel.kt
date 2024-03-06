@@ -3,7 +3,7 @@ package com.example.arduinobluetooth.presentation.viewmodels.mock
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.arduinobluetooth.data.Bluetooth.BluetoothConfigData
-import com.example.arduinobluetooth.presentation.viewmodels.ILoginViewModel
+import com.example.arduinobluetooth.interfaces.ILoginViewModel
 import com.example.arduinobluetooth.presentation.viewmodels.LoginUIState
 import com.icure.sdk.model.Contact
 import com.icure.sdk.model.Patient

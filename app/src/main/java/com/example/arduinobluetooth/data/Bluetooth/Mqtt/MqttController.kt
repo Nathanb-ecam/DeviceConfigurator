@@ -16,15 +16,22 @@ import org.eclipse.paho.android.service.MqttAndroidClient
 import org.eclipse.paho.client.mqttv3.IMqttActionListener
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
 import org.eclipse.paho.client.mqttv3.IMqttToken
+import org.eclipse.paho.client.mqttv3.MqttAsyncClient
 import org.eclipse.paho.client.mqttv3.MqttCallback
 import org.eclipse.paho.client.mqttv3.MqttClient
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions
 import org.eclipse.paho.client.mqttv3.MqttException
 import org.eclipse.paho.client.mqttv3.MqttMessage
+import java.io.ByteArrayInputStream
+import java.io.EOFException
 import java.io.FileInputStream
+import java.io.InputStream
 import java.security.KeyStore
 import java.security.Security
 import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
+import javax.net.ssl.HostnameVerifier
+import javax.net.ssl.HttpsURLConnection
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManagerFactory
@@ -38,7 +45,8 @@ data class LiveSession(
 
 class MqttController(val context: Context) : IMqttController {
 
-    private val CAcertPath = context.getString(R.string.CAcertPath)
+    private val caCertStream = context.resources.openRawResource(R.raw.mosquitto)
+    private var options : MqttConnectOptions? = null
 
     private var mqttClient  : MqttAndroidClient? = null
     companion object MQTT{
@@ -56,13 +64,15 @@ class MqttController(val context: Context) : IMqttController {
 
 
 
-    override fun createSSLSocketFactory(caCertPath: String): SSLSocketFactory {
+    override fun createSSLSocketFactory( cert : InputStream): SSLSocketFactory {
 
         val certificateFactory = CertificateFactory.getInstance("X.509")
 
-        val caCertFile = FileInputStream(caCertPath)
-        val caCert = certificateFactory.generateCertificate(caCertFile)
-        caCertFile.close()
+        val caCertBytes = caCertStream.readBytes()
+        caCertStream.close()
+
+        val caCert = certificateFactory.generateCertificate(ByteArrayInputStream(caCertBytes)) as X509Certificate
+
 
         val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
         keyStore.load(null, null)
@@ -73,16 +83,25 @@ class MqttController(val context: Context) : IMqttController {
 
         val sslContext = SSLContext.getInstance("TLS")
         sslContext.init(null, trustManagerFactory.trustManagers, null)
+
+        val hostnameVerifier = HostnameVerifier { hostname, _ ->
+            hostname == "test.mosquitto.org" || hostname.endsWith(".mosquitto.org")
+        }
+        HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.socketFactory)
+        HttpsURLConnection.setDefaultHostnameVerifier(hostnameVerifier)
+
+
         return sslContext.socketFactory
     }
     override fun getMqttClientOptions() : MqttConnectOptions{
 
         val mqttConnectOptions = MqttConnectOptions().apply {
-            userName = "iCureIoTUser"
-            password = "iCureIoTPassword".toCharArray()
+/*            userName = "iCureIoTUser"
+            password = "iCureIoTPassword".toCharArray()*/
             /*isAutomaticReconnect = true*/
             isCleanSession = true
-            /*socketFactory =createSSLSocketFactory(CAcertPath)*/
+            socketFactory =createSSLSocketFactory(caCertStream)
+
         }
         return mqttConnectOptions
     }
@@ -94,12 +113,18 @@ class MqttController(val context: Context) : IMqttController {
         //3 subscribe to topic
         if(mqttClient == null){
             val broker = context.getString(R.string.MqttbrokerURL)
-            mqttClient = createMqttClient(context,broker)
+            mqttClient = createMqttClient(context,broker,MqttAsyncClient.generateClientId())
         }
 
         if(!_rtData.value.connected){
-            val options = getMqttClientOptions()
-            connectBroker(mqttClient,options)
+            if(options == null){
+                options = getMqttClientOptions()
+
+            }
+            options?.let {
+                connectBroker(mqttClient,options!!)
+            }
+
         }else{
             if(!_rtData.value.subscribed) {
                 subscribe(topic)
@@ -129,6 +154,7 @@ class MqttController(val context: Context) : IMqttController {
 
                 override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
                     Log.i(TAG, "Connection failure")
+                    exception?.printStackTrace()
                     _rtData.update { currentState ->
                         currentState.copy(connected = false)
                     }
@@ -188,13 +214,26 @@ class MqttController(val context: Context) : IMqttController {
                 }
 
                 override fun onFailure(asyncActionToken: IMqttToken?, exception: Throwable?) {
-                    Log.d(TAG, "Failed to subscribe $topic")
-                    _rtData.update { currentState->
-                        currentState.copy(subscribed = false)
+                    try {
+                        // Code that might throw NullPointerException
+                        Log.d(TAG, "Failed to subscribe $topic")
+                        _rtData.update { currentState ->
+                            currentState.copy(subscribed = false)
+                        }
+
+                    } catch (e: NullPointerException) {
+                        closeMqttConnection()
+                        setupMqtt()
+                        Log.e(TAG, "NullPointerException occurred: ${e.message}")
                     }
                 }
             })
-        } catch (e: Exception) {
+        }/*catch(e : EOFException){
+
+            setupMqtt()
+        }*/
+        catch (e: Exception) {
+
             e.printStackTrace()
         }
     }
@@ -216,13 +255,18 @@ class MqttController(val context: Context) : IMqttController {
             })
 
         } catch (e : Exception){
-            Log.i("MQTT","Failed to unsubscribe")
+            Log.i("MQTT","Unsubscribe error")
+            e.printStackTrace()
 
         }
     }
 
     override fun closeMqttConnection(){
         Log.i(TAG,"Should close the conneciton")
+        _rtData.update {currentState->
+            currentState.copy(connected = false, subscribed = false)
+
+        }
         mqttClient = null
     }
 

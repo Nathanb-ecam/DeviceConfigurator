@@ -16,20 +16,22 @@ class MockLiveDataViewModel : ILiveData {
         const val TAG = "Mock Live Data ViewModel"
     }
 
-    override val liveData: MutableStateFlow<LiveSession> = MutableStateFlow(createMockLiveSession())
+    override val liveData: MutableStateFlow<LiveSession> = createMockLiveSession()
 
 
 
-    fun createMockLiveSession(): LiveSession {
-        return LiveSession(
-            connected = true,
-            subscribed = true,
-            liveSensorData = mutableListOf(
-                SensorDataContent(Content(MeasureValue(MeasureDetails("22","°C","temperature")))),
-                SensorDataContent(Content(MeasureValue(MeasureDetails("21.8","°C","temperature")))),
-                SensorDataContent(Content(MeasureValue(MeasureDetails("21.6","°C","temperature")))),
-                SensorDataContent(Content(MeasureValue(MeasureDetails("21.3","°C","temperature")))),
-                SensorDataContent(Content(MeasureValue(MeasureDetails("20.9","°C","temperature"))))
+    fun createMockLiveSession(): MutableStateFlow<LiveSession> {
+        return MutableStateFlow(
+            LiveSession(
+                connected = true,
+                subscribed = true,
+                liveSensorData = mutableListOf(
+                    SensorDataContent(Content(MeasureValue(MeasureDetails("22","°C","temperature")))),
+                    SensorDataContent(Content(MeasureValue(MeasureDetails("21.8","°C","temperature")))),
+                    SensorDataContent(Content(MeasureValue(MeasureDetails("21.6","°C","temperature")))),
+                    SensorDataContent(Content(MeasureValue(MeasureDetails("21.3","°C","temperature")))),
+                    SensorDataContent(Content(MeasureValue(MeasureDetails("20.9","°C","temperature"))))
+                )
             )
         )
     }

@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothGattCharacteristic
-import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
 import android.bluetooth.le.ScanCallback
@@ -15,7 +14,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.widget.Toast
-import com.example.arduinobluetooth.utils.BluetoothState
+import com.example.arduinobluetooth.interfaces.IBluetoothController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,13 +45,24 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
 
     private var updateScannedDevicesRunnable: Runnable? = null
 
-    private val serviceUuid = UUID.fromString("b1be5923-8ca2-415c-9f20-69023f8b4c33")
+   /* private val serviceUuid = UUID.fromString("b1be5923-8ca2-415c-9f20-69023f8b4c33")
     private val testUuid = UUID.fromString("8bbc0c8b-d41b-4fd3-8854-af19317d62a1")
     private val senderUuid = UUID.fromString("3dbd6a55-fcc7-4cd8-811f-2c5754296a0a")
     private val senderTokenUuid = UUID.fromString("0fd7161a-c2e2-44cb-a5ee-9dd3187424fc")
     private val encryptKeyUuid = UUID.fromString("7626adb2-28ab-4327-8ead-bb571cb1d7f0")
     private val contactId = UUID.fromString("477f3318-3a09-4c09-8273-bfb28163b7fd")
-    private val configStatusUuid = UUID.fromString("5fae4e14-ca8f-41d7-bd5b-c3a0498973ae")
+    private val configStatusUuid = UUID.fromString("5fae4e14-ca8f-41d7-bd5b-c3a0498973ae")*/
+
+    private val bleDeviceUuids = mapOf(
+        "serviceUuid" to UUID.fromString("b1be5923-8ca2-415c-9f20-69023f8b4c33"),
+        "testUuid" to UUID.fromString("8bbc0c8b-d41b-4fd3-8854-af19317d62a1"),
+        "senderUuid" to UUID.fromString("3dbd6a55-fcc7-4cd8-811f-2c5754296a0a"),
+        "senderTokenUuid" to UUID.fromString("0fd7161a-c2e2-44cb-a5ee-9dd3187424fc"),
+        "encryptKeyUuid" to UUID.fromString("7626adb2-28ab-4327-8ead-bb571cb1d7f0"),
+        "contactId" to UUID.fromString("477f3318-3a09-4c09-8273-bfb28163b7fd"),
+        "configStatusUuid" to UUID.fromString("5fae4e14-ca8f-41d7-bd5b-c3a0498973ae")
+    )
+
 
 
     private val cryptoUtils  = Crypto()
@@ -66,7 +76,7 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
     }
 
     override fun scanLeDevice(context: Context,){
-            if(!adapter.isEnabled){
+        if(!adapter.isEnabled){
                 Log.i("BTH","Bluetooth not enabled")
                 Toast.makeText(context, "Enable Bluetooth", Toast.LENGTH_SHORT).show()
                 return
@@ -188,8 +198,8 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
     override fun testDeviceConnection() {
         connectedGatt?.let { gatt ->
 
-            val arduinoService = gatt.getService(serviceUuid)
-            val testCharacteristic = arduinoService?.getCharacteristic(testUuid)
+            val arduinoService = gatt.getService(bleDeviceUuids.getValue("serviceUuid"))
+            val testCharacteristic = arduinoService?.getCharacteristic(bleDeviceUuids.getValue("testUuid"))
 
 
 
@@ -209,17 +219,18 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
         connectedGatt?.let { gatt ->
 
 
-            val arduinoService = gatt.getService(serviceUuid)
-            val senderIdCharacteristic = arduinoService?.getCharacteristic(senderUuid)
-            val senderTokenCharacteristic = arduinoService?.getCharacteristic(senderTokenUuid)
-            val senderKeyCharacteristic = arduinoService?.getCharacteristic(encryptKeyUuid)
-            val contactIdCharacteristic = arduinoService?.getCharacteristic(contactId)
+            val arduinoService = gatt.getService(bleDeviceUuids.getValue("serviceUuid"))
+            val senderIdCharacteristic = arduinoService?.getCharacteristic(bleDeviceUuids.getValue("senderUuid"))
+            val senderTokenCharacteristic = arduinoService?.getCharacteristic(bleDeviceUuids.getValue("senderTokenUuid"))
+            val senderKeyCharacteristic = arduinoService?.getCharacteristic(bleDeviceUuids.getValue("encryptKeyUuid"))
+            val contactIdCharacteristic = arduinoService?.getCharacteristic(bleDeviceUuids.getValue("contactId"))
             //val statusCharacteristic = arduinoService?.getCharacteristic(configStatusUuid)
 
             val allDefined = listOf(
                     senderIdCharacteristic,
                     senderTokenCharacteristic,
-                    senderKeyCharacteristic
+                    senderKeyCharacteristic,
+                    contactIdCharacteristic
                 )
                 .any { it != null }
 
@@ -391,20 +402,44 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
 
 
         override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
-            //super.onServicesDiscovered(gatt, status)
+
             Log.i("GATT","Service discovered")
 
-            val arduinoService = gatt?.getService(serviceUuid)
-            val statusCharacteristic = arduinoService?.getCharacteristic(configStatusUuid)
+            val arduinoService = gatt?.getService(bleDeviceUuids.getValue("serviceUuid"))
+            val statusCharacteristic = arduinoService?.getCharacteristic(bleDeviceUuids.getValue("configStatusUuid"))
 
             val CCCD_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
             val descriptor = statusCharacteristic?.getDescriptor(CCCD_UUID)
+
+            val services = gatt?.services
+            val icureService = services?.firstOrNull { svc ->
+                svc.uuid == bleDeviceUuids.getValue("serviceUuid")
+            }
+
+            if (icureService != null) {
+                // the device contains the right BLE service, we need to verify its characteristics
+                val characteristics = icureService.characteristics
+                characteristics?.forEach { characteristic ->
+                    Log.i("CHAR","charcac device")
+                    if(!bleDeviceUuids.containsValue(characteristic.uuid)) {
+                        _connectionState.value = BluetoothState.UNKNOWN_DEVICE
+                        Log.i("YESSIR","unknown device, was missing characteristics")
+                        return
+                    }
+                }
+            } else {
+                _connectionState.value = BluetoothState.UNKNOWN_DEVICE
+                Log.i("YESSIR","unknown device, deosnt even has the icure service")
+                return
+            }
+
 
             gatt?.setCharacteristicNotification(statusCharacteristic, true)
 
 
 
-            if (descriptor != null) {
+            // NEED TO SETUP NOTFICATIONS TO KNOW WHEN DEVICE IS SUCCESSFULY CONFIGURED
+    /*        if (descriptor != null) {
                 descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
                 val descriptorWriteResult = gatt.writeDescriptor(descriptor)
                 if (descriptorWriteResult == true) {
@@ -412,13 +447,10 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
                 } else {
                     Log.e("GATT", "Descriptor write failed")
                 }
-
-
-
-
             } else {
                 Log.e("Bluetooth", "Descriptor not found for CCCD UUID")
-            }
+            }*/
+            Log.i("YESSIR","this should not be printed if unknwon device")
             _connectionState.value = BluetoothState.READY_TO_CONFIGURE
         }
 
