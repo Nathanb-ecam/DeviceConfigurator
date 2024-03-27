@@ -47,7 +47,7 @@ class BluetoothViewModel (
 
 
     val connectionState : StateFlow<BluetoothState> = bluetoothController.connectionState.stateIn(viewModelScope, SharingStarted.WhileSubscribed(),
-        BluetoothState.DISCONNECTED)
+        BluetoothState.INIT)
 
     init {
         // Observe the scannedDevicesFlow from the BluetoothController

@@ -23,7 +23,7 @@ import javax.net.ssl.TrustManagerFactory
 
 interface IMqttController {
         val rtData : StateFlow<LiveSession>
-        fun createSSLSocketFactory(cert : InputStream): SSLSocketFactory
+        fun createSSLSocketFactory(oneWaySSL : Boolean = false): SSLSocketFactory?
         fun getMqttClientOptions() : MqttConnectOptions
 
         fun setupMqtt()

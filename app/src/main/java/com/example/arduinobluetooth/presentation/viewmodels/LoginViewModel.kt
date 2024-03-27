@@ -44,11 +44,13 @@ class LoginViewModel(
     
 
 
-    private var privateKey =context.resources.getString(R.string.privkey)
+    private var privateKey =context.getString(R.string.privkey)
 
     private var icureApi : IcureApi? = null
     private var storage = VolatileStorageFacade()
     private var dataOwnerid = context.getString(R.string.dataOwnerId)
+    private var cidToTestDecrypt = context.getString(R.string.cidToTestDecrypt)
+
 
 
     private var patient : Patient? = null
@@ -92,12 +94,14 @@ class LoginViewModel(
                     )
                 )
             )
-            createdPatient?.let {
+            return createdPatient
+  /*          createdPatient?.let {
                 val retrievedPatient = icureApi!!.patient.getAndDecrypt(createdPatient.id)
                 patient = retrievedPatient
                 return retrievedPatient
-            }
+            }*/
         }catch (e : Exception){
+            e.printStackTrace()
             Log.i("Patient","Error while craeting a patient")
         }
 
@@ -117,12 +121,14 @@ class LoginViewModel(
                     patient
                 )
             )
-            createdContact?.let {
+            return createdContact
+/*            createdContact?.let {
                 val retrievedContact = icureApi!!.contact.getAndDecrypt(createdContact.id)
                 contact = retrievedContact
                 return  retrievedContact
-            }
+            }*/
         }catch (e : Exception){
+            e.printStackTrace()
             Log.i("Contact","Error while creating contact")
         }
 
@@ -185,13 +191,17 @@ class LoginViewModel(
     override suspend fun testDecryption(){
         icureApi?.let {
             try {
-                val retrievedContact1 = icureApi!!.contact.getAndDecrypt(context.getString(R.string.cidToTestDecrypt))
+                val retrievedContact1 = icureApi!!.contact.getAndDecrypt(cidToTestDecrypt)
 
-                Log.i("Test ",cid)
+
+                /*Log.i("Test ",cid)*/
+
                 Log.i("Test Decryption",retrievedContact1.toString())
 
 
+
             }catch (e : Exception){
+                e.printStackTrace()
                 Log.i("Test Decryption",e.toString())
             }
 

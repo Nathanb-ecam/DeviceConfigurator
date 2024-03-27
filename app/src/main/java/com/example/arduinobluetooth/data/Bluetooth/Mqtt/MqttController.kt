@@ -26,12 +26,17 @@ import java.io.ByteArrayInputStream
 import java.io.EOFException
 import java.io.FileInputStream
 import java.io.InputStream
+import java.security.KeyFactory
 import java.security.KeyStore
+import java.security.PrivateKey
 import java.security.Security
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
+import java.security.spec.PKCS8EncodedKeySpec
+import java.util.Base64
 import javax.net.ssl.HostnameVerifier
 import javax.net.ssl.HttpsURLConnection
+import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManagerFactory
@@ -45,7 +50,10 @@ data class LiveSession(
 
 class MqttController(val context: Context) : IMqttController {
 
-    private val caCertStream = context.resources.openRawResource(R.raw.mosquitto)
+    private val caCertStream = context.resources.openRawResource(R.raw.ca)
+    private val clientCertStream = context.resources.openRawResource(R.raw.client_cert)
+    private val clientKeyStream = context.resources.openRawResource(R.raw.client_key)
+
     private var options : MqttConnectOptions? = null
 
     private var mqttClient  : MqttAndroidClient? = null
@@ -62,45 +70,63 @@ class MqttController(val context: Context) : IMqttController {
     override val rtData = _rtData.asStateFlow()
 
 
+    private fun getPrivateKey(inputStream: InputStream): PrivateKey {
+        val keyFactory = KeyFactory.getInstance("RSA")
+        val encodedKeyBytes = inputStream.readBytes()
+        val keySpec = PKCS8EncodedKeySpec(encodedKeyBytes)
+        return keyFactory.generatePrivate(keySpec)
+    }
+
+    override fun createSSLSocketFactory(oneWaySSL : Boolean): SSLSocketFactory? {
+        try {
+            val certificateFactory = CertificateFactory.getInstance("X.509")
+
+            val caCert = certificateFactory.generateCertificate(caCertStream) as X509Certificate
+            val clientCert = certificateFactory.generateCertificate(clientCertStream) as X509Certificate
+            val privateKey = getPrivateKey(clientKeyStream)
+
+            val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
+            keyStore.load(null, null)
+            keyStore.setCertificateEntry("caCert", caCert)
+            keyStore.setCertificateEntry("clientCert", clientCert)
+            keyStore.setKeyEntry("clientKey", privateKey, charArrayOf(), arrayOf(clientCert))
+
+            val keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm())
+            keyManagerFactory.init(keyStore, charArrayOf())
 
 
-    override fun createSSLSocketFactory( cert : InputStream): SSLSocketFactory {
+            val trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
+            trustManagerFactory.init(keyStore)
 
-        val certificateFactory = CertificateFactory.getInstance("X.509")
-
-        val caCertBytes = caCertStream.readBytes()
-        caCertStream.close()
-
-        val caCert = certificateFactory.generateCertificate(ByteArrayInputStream(caCertBytes)) as X509Certificate
+            val sslContext = SSLContext.getInstance("TLS")
+            sslContext.init(null, trustManagerFactory.trustManagers, null)
 
 
-        val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
-        keyStore.load(null, null)
-        keyStore.setCertificateEntry("caCert", caCert)
 
-        val trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
-        trustManagerFactory.init(keyStore)
+            val hostnameVerifier = HostnameVerifier { hostname, _ ->
+                hostname == context.resources.getString(R.string.broker_DN) //|| hostname.endsWith(".mosquitto.org")
+            }
+            HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.socketFactory)
+            HttpsURLConnection.setDefaultHostnameVerifier(hostnameVerifier)
 
-        val sslContext = SSLContext.getInstance("TLS")
-        sslContext.init(null, trustManagerFactory.trustManagers, null)
-
-        val hostnameVerifier = HostnameVerifier { hostname, _ ->
-            hostname == "test.mosquitto.org" || hostname.endsWith(".mosquitto.org")
+            return sslContext.socketFactory
+        }catch (e:Exception){
+            e.printStackTrace()
         }
-        HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.socketFactory)
-        HttpsURLConnection.setDefaultHostnameVerifier(hostnameVerifier)
 
 
-        return sslContext.socketFactory
+        return null
+
+
     }
     override fun getMqttClientOptions() : MqttConnectOptions{
 
         val mqttConnectOptions = MqttConnectOptions().apply {
-/*            userName = "iCureIoTUser"
-            password = "iCureIoTPassword".toCharArray()*/
+            userName = "iCureIoTUser"
+            password = "iCureIoTPassword".toCharArray()
             /*isAutomaticReconnect = true*/
             isCleanSession = true
-            socketFactory =createSSLSocketFactory(caCertStream)
+            /*socketFactory =createSSLSocketFactory()*/
 
         }
         return mqttConnectOptions
@@ -112,7 +138,7 @@ class MqttController(val context: Context) : IMqttController {
         //2 connect client to broker
         //3 subscribe to topic
         if(mqttClient == null){
-            val broker = context.getString(R.string.MqttbrokerURL)
+            val broker = context.getString(R.string.broker_url)
             mqttClient = createMqttClient(context,broker,MqttAsyncClient.generateClientId())
         }
 

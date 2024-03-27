@@ -56,8 +56,9 @@ fun LoginScreen(
 
 
 
-    val uidPlaceholder = context.getString(R.string.uid)
-    val tokenPlaceholder =context.getString(R.string.user_token)
+    val uidPlaceholder = context.getString(R.string.iCureUserId)
+
+    val tokenPlaceholder =context.getString(R.string.iCureUserPassword)
     /*val apiUrl = context.getString(R.string.icure_api_url)*/
     val localApiUrl = context.getString(R.string.icure_local_url)
 
