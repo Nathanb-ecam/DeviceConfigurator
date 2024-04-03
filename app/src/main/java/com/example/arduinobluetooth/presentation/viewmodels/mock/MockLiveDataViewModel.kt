@@ -1,14 +1,14 @@
 package com.example.arduinobluetooth.presentation.viewmodels.mock
 
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
-import com.example.arduinobluetooth.data.Bluetooth.Mqtt.Content
-import com.example.arduinobluetooth.data.Bluetooth.Mqtt.ILiveData
-import com.example.arduinobluetooth.data.Bluetooth.Mqtt.LiveSession
-import com.example.arduinobluetooth.data.Bluetooth.Mqtt.MeasureDetails
+import com.example.arduinobluetooth.bluetooth.BluetoothConfigData
+import com.example.arduinobluetooth.mqtt.Content
+import com.example.arduinobluetooth.mqtt.ILiveData
+import com.example.arduinobluetooth.mqtt.LiveSession
+import com.example.arduinobluetooth.mqtt.MeasureDetails
 
-import com.example.arduinobluetooth.data.Bluetooth.Mqtt.MeasureValue
-import com.example.arduinobluetooth.data.Bluetooth.Mqtt.SensorDataContent
+import com.example.arduinobluetooth.mqtt.MeasureValue
+import com.example.arduinobluetooth.mqtt.SensorDataContent
 import kotlinx.coroutines.flow.MutableStateFlow
 
 class MockLiveDataViewModel : ILiveData {
@@ -37,7 +37,7 @@ class MockLiveDataViewModel : ILiveData {
     }
 
 
-    override fun setupMqtt() {
+    override fun setupMqtt(deviceSymmetricKey: ByteArray) {
         Log.i(TAG,"setup Mqtt")
     }
 

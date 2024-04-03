@@ -2,8 +2,9 @@ package com.example.arduinobluetooth.presentation.viewmodels.mock
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import com.example.arduinobluetooth.data.Bluetooth.BluetoothConfigData
-import com.example.arduinobluetooth.interfaces.ILoginViewModel
+import com.example.arduinobluetooth.bluetooth.BluetoothConfigData
+import com.example.arduinobluetooth.login.ILoginViewModel
+import com.example.arduinobluetooth.presentation.viewmodels.DeviceDataStatus
 import com.example.arduinobluetooth.presentation.viewmodels.LoginUIState
 import com.icure.sdk.model.Contact
 import com.icure.sdk.model.Patient
@@ -17,12 +18,12 @@ class MockLoginViewModel : ILoginViewModel,ViewModel() {
     override val _uiState = MutableStateFlow(
         LoginUIState(
             true,
-            true,
+            DeviceDataStatus.INIT,
             BluetoothConfigData(
                 "abdcef1234-abdcef1234",
                 "a34ef12cd-abdcef1234",
                 "password",
-                "1111111111111111111111111111111111111111111111111111111111111111"
+                ByteArray(0)
             )
         )
     )

@@ -1,4 +1,4 @@
-package com.example.arduinobluetooth.interfaces
+package com.example.arduinobluetooth.login
 
 import com.example.arduinobluetooth.presentation.viewmodels.LoginUIState
 import com.icure.sdk.model.Contact

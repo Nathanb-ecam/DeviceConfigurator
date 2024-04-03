@@ -1,13 +1,14 @@
-package com.example.arduinobluetooth.data.Bluetooth.Mqtt
+package com.example.arduinobluetooth.mqtt
 
-import com.fasterxml.jackson.annotation.JsonCreator
 import com.fasterxml.jackson.annotation.JsonProperty
+import java.util.UUID
 
 data class DevicePacket(
     @JsonProperty("uid") val uid: String,
     @JsonProperty("cid") val cid: String,
     @JsonProperty("token") val token: String,
-    @JsonProperty("data") val data: SensorDataContent
+    @JsonProperty("data") val data: String
+    /*@JsonProperty("data") val data: SensorDataContent*/
 )
 
 data class SensorDataContent(

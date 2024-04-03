@@ -2,14 +2,9 @@ package com.example.arduinobluetooth.presentation
 
 
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 
 import androidx.compose.material.*
 import androidx.compose.material3.Scaffold
@@ -17,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
@@ -27,9 +21,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.example.arduinobluetooth.R
-import com.example.arduinobluetooth.Screen
-import com.example.arduinobluetooth.data.Bluetooth.BottomNavItem
-import com.example.arduinobluetooth.data.Bluetooth.Mqtt.ILiveData
+import com.example.arduinobluetooth.mqtt.ILiveData
 import com.example.arduinobluetooth.presentation.appscreens.BluetoothScreen
 import com.example.arduinobluetooth.presentation.appscreens.DeviceDetailScreen
 import com.example.arduinobluetooth.presentation.appscreens.DeviceLiveDataScreen
@@ -71,7 +63,8 @@ fun Navigation(navController : NavHostController, bluetoothViewModel: BluetoothV
             ScreenScaffolder(navController = navController, bottomNavItems = bottomNavItems) {
                 DeviceLiveDataScreen(
                     navController = navController,
-                    liveDataViewModel = liveDataViewModel as ILiveData
+                    liveDataViewModel = liveDataViewModel as ILiveData,
+                    loginViewModel = loginViewModel
                 )
             }
         }
@@ -150,7 +143,7 @@ fun BottomNavigationBar(
     val context = LocalContext.current
     val backStackEntry = navController.currentBackStackEntryAsState()
     // if we are currently on the loginscreen, we don't want to have bottom bar
-    if (backStackEntry.value?.destination?.route !=Screen.LoginScreen.route){
+    if (backStackEntry.value?.destination?.route != Screen.LoginScreen.route){
         BottomNavigation(
             modifier = Modifier,
             backgroundColor = Color(context.resources.getColor(R.color.icure_black)),

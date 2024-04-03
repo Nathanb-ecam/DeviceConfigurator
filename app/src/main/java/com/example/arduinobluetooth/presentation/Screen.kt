@@ -1,4 +1,4 @@
-package com.example.arduinobluetooth
+package com.example.arduinobluetooth.presentation
 
 sealed class Screen(val route:String) {
     object BlueScreen : Screen("blue")

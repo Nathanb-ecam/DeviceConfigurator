@@ -3,10 +3,11 @@ package com.example.arduinobluetooth.presentation.viewmodels
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.arduinobluetooth.data.Bluetooth.Mqtt.ILiveData
-import com.example.arduinobluetooth.data.Bluetooth.Mqtt.IMqttController
-import com.example.arduinobluetooth.data.Bluetooth.Mqtt.LiveSession
-import com.example.arduinobluetooth.data.Bluetooth.Mqtt.SensorDataContent
+import com.example.arduinobluetooth.bluetooth.BluetoothConfigData
+import com.example.arduinobluetooth.mqtt.ILiveData
+import com.example.arduinobluetooth.mqtt.IMqttController
+import com.example.arduinobluetooth.mqtt.LiveSession
+import com.example.arduinobluetooth.mqtt.SensorDataContent
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.stateIn
 
@@ -29,8 +30,8 @@ class LiveDataViewModel(
     )
 
 
-    override fun setupMqtt() {
-        mqttController.setupMqtt()
+    override fun setupMqtt(deviceSymmetricKey: ByteArray) {
+        mqttController.setupMqtt(deviceSymmetricKey)
     }
 
     override fun subscribe(){

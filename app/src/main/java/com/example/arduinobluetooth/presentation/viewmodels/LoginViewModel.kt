@@ -4,11 +4,12 @@ import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.arduinobluetooth.R
-import com.example.arduinobluetooth.data.Bluetooth.BluetoothConfigData
-import com.example.arduinobluetooth.interfaces.ILoginViewModel
+import com.example.arduinobluetooth.bluetooth.BluetoothConfigData
+import com.example.arduinobluetooth.login.ILoginViewModel
 import com.icure.kryptom.crypto.RsaAlgorithm
 import com.icure.kryptom.crypto.defaultCryptoService
 import com.icure.kryptom.utils.hexToByteArray
+import com.icure.kryptom.utils.toHexString
 import com.icure.sdk.api.IcureApi
 import com.icure.sdk.auth.UsernamePassword
 
@@ -26,9 +27,15 @@ import kotlinx.coroutines.flow.asStateFlow
 
 import java.util.UUID
 
+
+enum class DeviceDataStatus{
+    READY,
+    ERROR,
+    INIT
+}
 data class LoginUIState(
     val apiInitalized : Boolean,
-    val deviceDataReady: Boolean,
+    val deviceDataStatus: DeviceDataStatus,
     val deviceConfigData: BluetoothConfigData
 )
 
@@ -37,18 +44,17 @@ class LoginViewModel(
     val context: Context
 ) : ILoginViewModel,ViewModel() {
 
-    override val _uiState = MutableStateFlow(LoginUIState(false,false,
-        BluetoothConfigData("","","","")
+    override val _uiState = MutableStateFlow(LoginUIState(false,DeviceDataStatus.INIT,
+        BluetoothConfigData("","","", ByteArray(0))
     ))
     override val uiState : StateFlow<LoginUIState> = _uiState.asStateFlow();
     
-
 
     private var privateKey =context.getString(R.string.privkey)
 
     private var icureApi : IcureApi? = null
     private var storage = VolatileStorageFacade()
-    private var dataOwnerid = context.getString(R.string.dataOwnerId)
+    private var dataOwnerId = context.getString(R.string.dataOwnerId)
     private var cidToTestDecrypt = context.getString(R.string.cidToTestDecrypt)
 
 
@@ -102,6 +108,7 @@ class LoginViewModel(
             }*/
         }catch (e : Exception){
             e.printStackTrace()
+            updateDataStatus(DeviceDataStatus.ERROR)
             Log.i("Patient","Error while craeting a patient")
         }
 
@@ -141,27 +148,45 @@ class LoginViewModel(
             val patient = createPatient("Jean","Jacques")
             if(patient == null){
                 Log.i("ICURE API","Couldn't get patient")
+                updateDataStatus(DeviceDataStatus.ERROR)
                 return
             }
 
             val createdContact = createContact(patient)
             if(createdContact == null){
                 Log.i("ICURE API","Couldn't create contact")
+                updateDataStatus(DeviceDataStatus.ERROR)
                 return
             }
 
 
             createdContact.let {
                 symmetricKey = icureApi!!.contact.getEncryptionKeyOf(createdContact).s
+                val byteArrayKey = hexToByteArray(symmetricKey!!)
+                /*                var byteArrayKey : ByteArray? = null
+                symmetricKey?.let {
+                    byteArrayKey = hexToByteArray(symmetricKey!!)
+                    try {
+                        byteArrayKey?.let { KeyStoreManager.storeEncryptionKey(byteArrayKey!!) }
+                        val key = KeyStoreManager.getEncryptionKey()
+                        val hexString = key?.toHexString()
+                        println("immediate retreived stored key $hexString ")
+                        println("stored  $key")
+                    }catch (e : Exception){
+                        e.printStackTrace()
+                    }
+                }*/
+
                 /*Log.i("KEY", symmetricKey.toString())*/
                 symmetricKey?.let {
                     try {
                         val currentState = _uiState.value;
-                        val bluetoothConfigData = BluetoothConfigData(cid,userId!!,userPassword!!,symmetricKey!!) // testKey!!
-                        _uiState.value = currentState.copy(deviceConfigData = bluetoothConfigData,deviceDataReady = true)
+                        val bluetoothConfigData = BluetoothConfigData(cid,userId!!,userPassword!!,byteArrayKey) // testKey!!
+                        _uiState.value = currentState.copy(deviceConfigData = bluetoothConfigData,deviceDataStatus = DeviceDataStatus.READY)
                         Log.i("ICURE DATA CONFIG","Got device config data")
                         testDecryption()
                     }catch (e : Exception){
+                        updateDataStatus(DeviceDataStatus.ERROR)
                         Log.i("ICURE DATA CONFIG","Couldn't get device config data")
                     }
                 }
@@ -169,6 +194,11 @@ class LoginViewModel(
         }
     }
 
+
+    fun updateDataStatus(status : DeviceDataStatus){
+        val currentState = _uiState.value;
+        _uiState.value = currentState.copy(deviceDataStatus = status)
+    }
 
     @OptIn(InternalIcureApi::class)
     override suspend fun handleKeyStorage(){
@@ -180,7 +210,7 @@ class LoginViewModel(
             false
         )
         icureFacade.saveEncryptionKeypair(
-            dataOwnerid,
+            dataOwnerId,
             defaultCryptoService.rsa.loadKeyPairPkcs8(RsaAlgorithm.RsaEncryptionAlgorithm.OaepWithSha256, hexToByteArray(privateKey)),
             true
         )
@@ -193,12 +223,7 @@ class LoginViewModel(
             try {
                 val retrievedContact1 = icureApi!!.contact.getAndDecrypt(cidToTestDecrypt)
 
-
-                /*Log.i("Test ",cid)*/
-
                 Log.i("Test Decryption",retrievedContact1.toString())
-
-
 
             }catch (e : Exception){
                 e.printStackTrace()

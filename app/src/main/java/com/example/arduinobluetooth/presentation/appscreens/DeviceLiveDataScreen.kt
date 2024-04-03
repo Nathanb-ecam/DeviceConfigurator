@@ -7,13 +7,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -30,32 +28,42 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.arduinobluetooth.R
-import com.example.arduinobluetooth.Screen
-import com.example.arduinobluetooth.data.Bluetooth.Mqtt.ILiveData
-import com.example.arduinobluetooth.data.Bluetooth.Mqtt.LiveSession
-import com.example.arduinobluetooth.data.Bluetooth.Mqtt.SensorDataContent
-import com.example.arduinobluetooth.presentation.uiComponents.h3
-import com.example.arduinobluetooth.presentation.uiComponents.pHint
-import com.example.arduinobluetooth.presentation.viewmodels.LiveDataViewModel
+import com.example.arduinobluetooth.mqtt.ILiveData
+import com.example.arduinobluetooth.mqtt.LiveSession
+import com.example.arduinobluetooth.mqtt.SensorDataContent
+import com.example.arduinobluetooth.presentation.Screen
+import com.example.arduinobluetooth.presentation.uiComponents.iCureButton
+import com.example.arduinobluetooth.presentation.uiComponents.Popup
+import com.example.arduinobluetooth.presentation.uiComponents.iCureProgressIndicator
+import com.example.arduinobluetooth.presentation.uiComponents.iCureTextStyles
+
+import com.example.arduinobluetooth.presentation.viewmodels.LoginViewModel
 import com.example.arduinobluetooth.presentation.viewmodels.mock.MockLiveDataViewModel
 import com.example.arduinobluetooth.ui.theme.ArduinoBluetoothTheme
+import com.icure.kryptom.utils.hexToByteArray
+import com.icure.kryptom.utils.toHexString
 
 
 @Composable
 fun DeviceLiveDataScreen(
     navController: NavController,
-    liveDataViewModel : ILiveData = viewModel()
+    liveDataViewModel : ILiveData = viewModel(),
+    loginViewModel: LoginViewModel
+
 ) {
+    val loginState by loginViewModel.uiState.collectAsState()
     val liveData by liveDataViewModel.liveData.collectAsState()
     val context = LocalContext.current
 
 
 
+    if(!liveData.connected){
+        liveDataViewModel.setupMqtt(loginState.deviceConfigData.key)
+    }
 
-    liveDataViewModel.setupMqtt()
+
 
 
     DisposableEffect(Unit) {
@@ -75,10 +83,7 @@ fun DeviceLiveDataScreen(
                     .padding(10.dp),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(
-                    color = Color(context.resources.getColor(R.color.icure_green)),
-                    modifier = Modifier.wrapContentSize(),
-                )
+                iCureProgressIndicator.getCirculatorIndicator(context)
             }
         }
 
@@ -142,7 +147,7 @@ fun DeviceDataCard(sensorData : SensorDataContent){
             }
             Text(
             sensorData.content.measures.value.comment.toString()
-                ,style = pHint
+                ,style = iCureTextStyles.pHint()
                 ,maxLines = 2
                 ,overflow = TextOverflow.Ellipsis
             )
@@ -162,10 +167,12 @@ fun DeviceLiveDataPreview() {
 
 
         val liveDataViewModel : ILiveData = MockLiveDataViewModel()
+        val loginViewModel = viewModel{ LoginViewModel(context) }
 
         DeviceLiveDataScreen(
             navController = navController,
-            liveDataViewModel = liveDataViewModel
+            liveDataViewModel = liveDataViewModel,
+            loginViewModel = loginViewModel
         )
 
 

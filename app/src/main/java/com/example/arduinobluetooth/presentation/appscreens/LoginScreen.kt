@@ -26,7 +26,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.arduinobluetooth.R
-import com.example.arduinobluetooth.Screen
+import com.example.arduinobluetooth.presentation.Screen
+import com.example.arduinobluetooth.presentation.uiComponents.iCureButton
+import com.example.arduinobluetooth.presentation.uiComponents.iCureTextFields
 import com.example.arduinobluetooth.presentation.viewmodels.LoginViewModel
 import com.example.arduinobluetooth.ui.theme.ArduinoBluetoothTheme
 import kotlinx.coroutines.launch
@@ -39,25 +41,13 @@ fun LoginScreen(
     loginViewModel: LoginViewModel
 ){
 
-    // need to fetch all authorized users
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
 
 
-    val textFieldColors = androidx.compose.material.TextFieldDefaults.outlinedTextFieldColors(
-        leadingIconColor = Color(context.resources.getColor(R.color.icure_green)),
-        focusedBorderColor = Color(context.resources.getColor(R.color.icure_green)),
-        unfocusedBorderColor = Color(context.resources.getColor(R.color.icure_green)),
-        cursorColor = Color(context.resources.getColor(R.color.icure_green)),
-        focusedLabelColor =Color(context.resources.getColor(R.color.icure_green)),
-    )
-
-
-
     val uidPlaceholder = context.getString(R.string.iCureUserId)
-
     val tokenPlaceholder =context.getString(R.string.iCureUserPassword)
     /*val apiUrl = context.getString(R.string.icure_api_url)*/
     val localApiUrl = context.getString(R.string.icure_local_url)
@@ -106,7 +96,7 @@ fun LoginScreen(
                     label = {Text("Nom d'utilisateur")},
                     textStyle = LocalTextStyle.current.copy(color = Color.Gray),
                     maxLines = 1,
-                    colors = textFieldColors,
+                    colors = iCureTextFields.getiCureOutlinedTextFieldColors(context),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(2.dp),
@@ -120,7 +110,7 @@ fun LoginScreen(
                     label = {Text("Mot de passe")},
                     textStyle = LocalTextStyle.current.copy(color = Color.Gray),
                     maxLines = 1,
-                    colors = textFieldColors,
+                    colors = iCureTextFields.getiCureOutlinedTextFieldColors(context),
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier
                         .fillMaxWidth()
@@ -133,10 +123,7 @@ fun LoginScreen(
                     modifier = Modifier
                         .align(alignment = Alignment.CenterHorizontally)
                         .fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(context.resources.getColor(R.color.icure_green)),
-                        contentColor = Color.White
-                    ),
+                    colors = iCureButton.getButtonColors(context),
                     onClick = {
                         scope.launch{
                             if(!uiState.apiInitalized){

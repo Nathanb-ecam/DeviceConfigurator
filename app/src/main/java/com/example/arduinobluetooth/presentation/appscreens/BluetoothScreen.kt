@@ -21,7 +21,6 @@ import androidx.compose.material.TextField
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -44,15 +43,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.arduinobluetooth.R
-import com.example.arduinobluetooth.Screen
-import com.example.arduinobluetooth.interfaces.IBluetoothController
-import com.example.arduinobluetooth.data.Bluetooth.MockBluetoothController
-import com.example.arduinobluetooth.presentation.uiComponents.h3
-import com.example.arduinobluetooth.presentation.uiComponents.pHint
+import com.example.arduinobluetooth.presentation.Screen
+import com.example.arduinobluetooth.bluetooth.IBluetoothController
+import com.example.arduinobluetooth.bluetooth.MockBluetoothController
 import com.example.arduinobluetooth.presentation.viewmodels.BluetoothViewModel
 import com.example.arduinobluetooth.presentation.viewmodels.LoginViewModel
 import com.example.arduinobluetooth.ui.theme.ArduinoBluetoothTheme
-import com.example.arduinobluetooth.data.Bluetooth.BluetoothState
+import com.example.arduinobluetooth.bluetooth.BluetoothState
+import com.example.arduinobluetooth.presentation.uiComponents.iCureButton
+import com.example.arduinobluetooth.presentation.uiComponents.iCureTextFields
+import com.example.arduinobluetooth.presentation.uiComponents.iCureTextStyles
 
 
 @SuppressLint("MissingPermission")
@@ -68,7 +68,7 @@ fun BluetoothScreen(
 
 
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+
 
     val scannedDevices by blueViewModel.scannedDevices.collectAsState()
     val searchText by blueViewModel.searchText.collectAsState()
@@ -77,18 +77,10 @@ fun BluetoothScreen(
     blueViewModel.disconnectCurrentDevice()
 
 
-    val buttonDefaults = ButtonDefaults.buttonColors(
-        containerColor = Color(context.resources.getColor(R.color.icure_green)),
-        contentColor = Color.White
-    )
 
 
-    val textFieldColors = TextFieldDefaults.textFieldColors(
-        focusedIndicatorColor = Color(context.resources.getColor(R.color.icure_green)),
-        cursorColor = Color(context.resources.getColor(R.color.icure_green)),
-        focusedLabelColor = Color(context.resources.getColor(R.color.icure_green)),
-        leadingIconColor = Color(context.resources.getColor(R.color.icure_green)),
-    )
+
+
 
     if(searchText.isNotEmpty()){
         blueViewModel.stopScan(context = context)
@@ -113,7 +105,7 @@ fun BluetoothScreen(
                 value = searchText,
                 onValueChange = blueViewModel::onSearchTextChange,
                 label = { Text("Rechercher") },
-                colors = textFieldColors,
+                colors = iCureTextFields.getICureTextFieldColors(context),
                 modifier = Modifier.padding(8.dp)
             )
             Icon(
@@ -157,7 +149,7 @@ fun BluetoothScreen(
                                 /*blueViewModel.stopScan(context = context)*/
                                 blueViewModel.connectDevice(myDevice.address)
                                 navController.navigate(Screen.DeviceDetailScreen.withArgs(myDevice.address))
-                       /*         Handler(Looper.getMainLooper()).postDelayed({
+                                /*         Handler(Looper.getMainLooper()).postDelayed({
                                     blueViewModel.connectDevice(myDevice.address)
                                     navController.navigate(Screen.DeviceDetailScreen.withArgs(myDevice.address))
                                 }, 500)*/
@@ -178,7 +170,7 @@ fun BluetoothScreen(
 
                             Text(
                                 text = myDevice.rssi.toString().substring(1),
-                                style = h3, color = Color(context.resources.getColor(R.color.icure_green)),
+                                style = iCureTextStyles.h3(), color = Color(context.resources.getColor(R.color.icure_green)),
                                 textAlign = TextAlign.Center,
                             )
                             //Icon(imageVector = Icons.Default.Clear, contentDescription = "lo")
@@ -195,8 +187,8 @@ fun BluetoothScreen(
                                 //.align(Alignment.CenterVertically)
                                 .padding(horizontal = 12.dp, vertical = 4.dp)
                         ){
-                            Text(text = myDevice.name?:"No name",style = h3,color = Color(context.resources.getColor(R.color.icure_black)))
-                            Text(text = myDevice.address?:"No adress", style = pHint,color = Color(context.resources.getColor(R.color.icure_black)))
+                            Text(text = myDevice.name?:"No name",style = iCureTextStyles.h3(),color = Color(context.resources.getColor(R.color.icure_black)))
+                            Text(text = myDevice.address?:"No adress", style = iCureTextStyles.pHint(),color = Color(context.resources.getColor(R.color.icure_black)))
 
                         }
                     }

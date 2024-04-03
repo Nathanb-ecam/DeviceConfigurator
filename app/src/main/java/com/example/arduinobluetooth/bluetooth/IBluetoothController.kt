@@ -1,9 +1,9 @@
-package com.example.arduinobluetooth.interfaces
+package com.example.arduinobluetooth.bluetooth
 
 import android.content.Context
-import com.example.arduinobluetooth.data.Bluetooth.BluetoothConfigData
-import com.example.arduinobluetooth.data.Bluetooth.MyBluetoothDevice
-import com.example.arduinobluetooth.data.Bluetooth.BluetoothState
+import com.example.arduinobluetooth.bluetooth.BluetoothConfigData
+import com.example.arduinobluetooth.bluetooth.MyBluetoothDevice
+import com.example.arduinobluetooth.bluetooth.BluetoothState
 import kotlinx.coroutines.flow.StateFlow
 
 interface IBluetoothController  {

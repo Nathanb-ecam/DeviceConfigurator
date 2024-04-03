@@ -4,10 +4,10 @@ import android.annotation.SuppressLint
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.arduinobluetooth.data.Bluetooth.BluetoothConfigData
-import com.example.arduinobluetooth.interfaces.IBluetoothController
-import com.example.arduinobluetooth.data.Bluetooth.MyBluetoothDevice
-import com.example.arduinobluetooth.data.Bluetooth.BluetoothState
+import com.example.arduinobluetooth.bluetooth.BluetoothConfigData
+import com.example.arduinobluetooth.bluetooth.IBluetoothController
+import com.example.arduinobluetooth.bluetooth.MyBluetoothDevice
+import com.example.arduinobluetooth.bluetooth.BluetoothState
 
 
 import kotlinx.coroutines.flow.MutableStateFlow

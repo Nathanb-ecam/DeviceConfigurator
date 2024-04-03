@@ -14,12 +14,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
-import com.example.arduinobluetooth.data.Bluetooth.BluetoothControllerImpl
-import com.example.arduinobluetooth.data.Bluetooth.BottomNavItem
-import com.example.arduinobluetooth.data.Bluetooth.Mqtt.MqttController
+import com.example.arduinobluetooth.bluetooth.BluetoothControllerImpl
+import com.example.arduinobluetooth.presentation.BottomNavItem
+import com.example.arduinobluetooth.mqtt.MqttController
 import com.example.arduinobluetooth.presentation.viewmodels.BluetoothViewModel
 import com.example.arduinobluetooth.presentation.viewmodels.LoginViewModel
 import com.example.arduinobluetooth.presentation.Navigation
+import com.example.arduinobluetooth.presentation.Screen
 import com.example.arduinobluetooth.presentation.viewmodels.LiveDataViewModel
 import com.example.arduinobluetooth.ui.theme.ArduinoBluetoothTheme
 import com.example.arduinobluetooth.utils.BLEPermissions

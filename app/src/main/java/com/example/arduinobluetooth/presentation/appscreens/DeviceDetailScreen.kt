@@ -3,6 +3,7 @@ package com.example.arduinobluetooth.presentation.appscreens
 
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -11,7 +12,6 @@ import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.twotone.CheckCircle
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -26,18 +26,21 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.arduinobluetooth.R
-import com.example.arduinobluetooth.Screen
-import com.example.arduinobluetooth.data.Bluetooth.BluetoothConfigData
-import com.example.arduinobluetooth.data.Bluetooth.MockBluetoothController
-import com.example.arduinobluetooth.data.Bluetooth.MyBluetoothDevice
-import com.example.arduinobluetooth.presentation.uiComponents.h1
+import com.example.arduinobluetooth.presentation.Screen
+import com.example.arduinobluetooth.bluetooth.BluetoothConfigData
+import com.example.arduinobluetooth.bluetooth.MockBluetoothController
+import com.example.arduinobluetooth.bluetooth.MyBluetoothDevice
+
 import com.example.arduinobluetooth.presentation.viewmodels.BluetoothViewModel
 import com.example.arduinobluetooth.presentation.uiComponents.Popup
-import com.example.arduinobluetooth.presentation.uiComponents.pHint
-import com.example.arduinobluetooth.interfaces.ILoginViewModel
+import com.example.arduinobluetooth.login.ILoginViewModel
 import com.example.arduinobluetooth.presentation.viewmodels.mock.MockLoginViewModel
 import com.example.arduinobluetooth.ui.theme.ArduinoBluetoothTheme
-import com.example.arduinobluetooth.data.Bluetooth.BluetoothState
+import com.example.arduinobluetooth.bluetooth.BluetoothState
+import com.example.arduinobluetooth.presentation.uiComponents.iCureButton
+import com.example.arduinobluetooth.presentation.uiComponents.iCureProgressIndicator
+import com.example.arduinobluetooth.presentation.uiComponents.iCureTextStyles
+import com.example.arduinobluetooth.presentation.viewmodels.DeviceDataStatus
 import kotlinx.coroutines.delay
 
 
@@ -55,15 +58,14 @@ fun DeviceDetailScreen(
     val connectionState by blueViewModel.connectionState.collectAsState()
     val loginUIState = loginViewModel.uiState.collectAsState()
 
-    val delayBeforeStopConnecting = 15000L
-    val buttonDefaults = ButtonDefaults.buttonColors(
-        containerColor = Color(context.resources.getColor(R.color.icure_green)),
-        contentColor = Color.White
-    )
+    val delayBeforeStopConnecting = 10000L
+
+
+
     var unableToConnect by remember { mutableStateOf(false) }
     var probablyNotAnICureDevice by remember { mutableStateOf(false) }
 
-    handleConnectionError(unableToConnect,probablyNotAnICureDevice,navController,buttonDefaults)
+    handleConnectionError(unableToConnect,probablyNotAnICureDevice,navController, context = context)
 
 
     Box(
@@ -79,21 +81,34 @@ fun DeviceDetailScreen(
                     loginViewModel.getDeviceConfigData()
                 }
 
-                Log.i("deviceDataReady",loginUIState.value.deviceDataReady.toString())
-                if(loginUIState.value.deviceDataReady){
-                    device.let{
-                        val deviceConfigData = loginUIState.value.deviceConfigData
-                        DeviceConfiguration(device,deviceConfigData,blueViewModel,buttonDefaults,connectionState)
+                /*Log.i("deviceDataReady",loginUIState.value.deviceDataReady.toString())*/
+                when (loginUIState.value.deviceDataStatus) {
+                    DeviceDataStatus.READY -> {
+                        device.let{
+                            val deviceConfigData = loginUIState.value.deviceConfigData
+                            DeviceConfiguration(device,deviceConfigData,blueViewModel,iCureButton.getButtonColors(context),connectionState)
+                        }
                     }
-                }else{
-                    Text("Creation du contact ...")
-                    Log.i("CONFIG", "Missing informations to configure the device")
+                    DeviceDataStatus.ERROR -> {
+                        Popup(
+                            buttonColors = iCureButton.getButtonColors(context),
+                            alertTitle = "Erreur lors de la création du contact",
+                            buttonText = "Fermer",
+                            onPopupClose = {
+                                navController.navigate(Screen.BlueScreen.route)
+                            }
+                        )
+                    }
+                    else -> {
+                        Text("Creation du contact ...")
+                        Log.i("CONFIG", "Waiting contact data to configure the device")
+                    }
                 }
 
             }
             BluetoothState.CONFIGURED -> {
                 Popup(
-                    buttonColors = buttonDefaults,
+                    buttonColors = iCureButton.getButtonColors(context),
                     alertTitle = "Configuration réussie",
                     buttonText = "Fermer",
                     onPopupClose = {
@@ -125,10 +140,7 @@ fun DeviceDetailScreen(
                         .padding(10.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(
-                        color = Color(context.resources.getColor(R.color.icure_green)),
-                        modifier = Modifier.wrapContentSize(),
-                    )
+                    iCureProgressIndicator.getCirculatorIndicator(context)
                 }
             }
         }
@@ -169,12 +181,12 @@ fun DeviceConfiguration(device: MyBluetoothDevice, deviceConfigData : BluetoothC
                     text = device.name,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
-                    style = h1
+                    style = iCureTextStyles.h1()
                 )
 
 
 
-                Text(text = device.address, style = pHint)
+                Text(text = device.address, style = iCureTextStyles.pHint())
 
 
                 Button(
@@ -211,11 +223,13 @@ fun handleConnectionError(
     unableToConnect : Boolean,
     probablyNotAnICureDevice : Boolean,
     navController: NavController,
-    buttonDefaults : ButtonColors
+    context : Context
 ){
+
+    val iCureButtonColors = iCureButton.getButtonColors(context)
     if(unableToConnect){
         Popup(
-            buttonColors = buttonDefaults,
+            buttonColors = iCureButtonColors,
             alertTitle = "Impossible de se connecter",
             buttonText ="Fermer",
             onPopupClose = {
@@ -233,7 +247,7 @@ fun handleConnectionError(
 
     if(probablyNotAnICureDevice){
         Popup(
-            buttonColors = buttonDefaults,
+            buttonColors = iCureButtonColors,
             alertTitle = "L'appareil n'est pas d'iCure",
             buttonText ="Fermer",
             onPopupClose = {

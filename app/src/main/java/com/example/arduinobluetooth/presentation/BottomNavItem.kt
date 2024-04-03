@@ -1,4 +1,4 @@
-package com.example.arduinobluetooth.data.Bluetooth
+package com.example.arduinobluetooth.presentation
 
 import androidx.compose.ui.graphics.vector.ImageVector
 
