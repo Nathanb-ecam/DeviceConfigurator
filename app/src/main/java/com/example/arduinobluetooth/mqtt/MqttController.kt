@@ -54,7 +54,7 @@ class MqttController(val context: Context) : IMqttController {
     private val caCertStream = context.resources.openRawResource(R.raw.buchinn_ca)
 /*    private val clientCertStream = context.resources.openRawResource(R.raw.client_cert)
     private val clientKeyStream = context.resources.openRawResource(R.raw.client_key)*/
-    private val useTLS = context.resources.getString(R.string.useTLS).toBoolean()
+
 
     private val mqttUser = context.resources.getString(R.string.mqtt_username)
     private val mqttPassword = context.resources.getString(R.string.mqtt_password)
@@ -124,16 +124,14 @@ class MqttController(val context: Context) : IMqttController {
 
 
     }
-    override fun getMqttClientOptions(useTLS : Boolean) : MqttConnectOptions{
+    override fun getMqttClientOptions() : MqttConnectOptions{
 
         val mqttConnectOptions = MqttConnectOptions().apply {
             userName = mqttUser
             password = mqttPassword.toCharArray()
             /*isAutomaticReconnect = true*/
             isCleanSession = true
-            if(useTLS) socketFactory =createSSLSocketFactory()
-
-
+            socketFactory =createSSLSocketFactory()
         }
         return mqttConnectOptions
     }
@@ -148,12 +146,12 @@ class MqttController(val context: Context) : IMqttController {
 
         if(mqttClient == null){
             val broker = context.getString(R.string.broker_url)
-            mqttClient = createMqttClient(context,broker,MqttAsyncClient.generateClientId())
+            mqttClient = createMqttClient(context,broker,MqttAsyncClient.generateClientId(), deviceSymmetricKey)
         }
 
         if(!_rtData.value.connected){
             if(options == null){
-                options = getMqttClientOptions(useTLS)
+                options = getMqttClientOptions()
 
             }
             options?.let {
@@ -165,11 +163,6 @@ class MqttController(val context: Context) : IMqttController {
                 subscribe(topic)
             }
         }
-
-
-
-
-
 
     }
 
@@ -201,7 +194,7 @@ class MqttController(val context: Context) : IMqttController {
     }
 
 
-    override fun createMqttClient(context: Context, brokerURL : String, clientId : String ) : MqttAndroidClient?{
+    override fun createMqttClient(context: Context, brokerURL : String, clientId : String,deviceSymmetricKey: ByteArray  ) : MqttAndroidClient?{
         return try {
             val mqttClient = MqttAndroidClient(context, brokerURL , clientId)
 
@@ -226,12 +219,12 @@ class MqttController(val context: Context) : IMqttController {
 
 
 
-/*                        val decodedData = Base64.getDecoder().decode(packet.data)
+                        val decodedData = Base64.getDecoder().decode(packet.data)
                         CoroutineScope(Dispatchers.IO).launch{
-                            deviceSymmetricSessionKey?.let{
+                            deviceSymmetricKey.let{key ->
                                 try {
-                                    val key = JvmAesService.loadKey(deviceSymmetricSessionKey!!)
-                                    val decrypted = JvmAesService.decrypt(decodedData,key)
+                                    val symmetricKey = JvmAesService.loadKey(key)
+                                    val decrypted = JvmAesService.decrypt(decodedData,symmetricKey)
                                     val sensorData = mapper.readValue(decrypted, SensorDataContent::class.java)
                                     println("decrypted $decrypted.to")
                                     _rtData.value = _rtData.value.copy(
@@ -244,7 +237,7 @@ class MqttController(val context: Context) : IMqttController {
                                     println(e)
                                 }
                             }
-                        }*/
+                        }
                     }catch (e : Exception){
                         println(e)
                     }

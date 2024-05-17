@@ -50,7 +50,7 @@ fun LoginScreen(
     val uidPlaceholder = context.getString(R.string.iCureUserId)
     val tokenPlaceholder =context.getString(R.string.iCureUserPassword)
     /*val apiUrl = context.getString(R.string.icure_api_url)*/
-    val localApiUrl = context.getString(R.string.icure_local_url)
+    val localApiUrl = context.getString(R.string.kraken_cloud_url)
 
     var username by rememberSaveable() { mutableStateOf(uidPlaceholder) }
     var password by rememberSaveable() { mutableStateOf(tokenPlaceholder) }

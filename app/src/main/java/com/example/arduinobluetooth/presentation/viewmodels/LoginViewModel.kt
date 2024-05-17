@@ -1,11 +1,13 @@
 package com.example.arduinobluetooth.presentation.viewmodels
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.arduinobluetooth.R
 import com.example.arduinobluetooth.bluetooth.BluetoothConfigData
 import com.example.arduinobluetooth.login.ILoginViewModel
+import com.example.arduinobluetooth.storage.MySharedPreferences
 import com.icure.kryptom.crypto.RsaAlgorithm
 import com.icure.kryptom.crypto.defaultCryptoService
 import com.icure.kryptom.utils.hexToByteArray
@@ -41,11 +43,11 @@ data class LoginUIState(
 
 
 class LoginViewModel(
-    val context: Context
+    private val context: Context
 ) : ILoginViewModel,ViewModel() {
 
     override val _uiState = MutableStateFlow(LoginUIState(false,DeviceDataStatus.INIT,
-        BluetoothConfigData("","","", ByteArray(0))
+        BluetoothConfigData("","","", ByteArray(0),"")
     ))
     override val uiState : StateFlow<LoginUIState> = _uiState.asStateFlow();
     
@@ -59,16 +61,20 @@ class LoginViewModel(
 
 
 
-    private var patient : Patient? = null
-    private var contact : Contact? = null
-
-
-
-    private val cid = defaultCryptoService.strongRandom.randomUUID()
+    private var cid : String? = null
     private var userId : String? = null
     private var userPassword : String? = null
     private var symmetricKey : String? = null
 
+    private val sharedPreferences: MySharedPreferences = MySharedPreferences(context)
+    init {
+        cid = sharedPreferences.cid
+/*        Log.i("STORED",sharedPreferences.cid.toString())
+        if(cid == null) cid = defaultCryptoService.strongRandom.randomUUID()
+        sharedPreferences.cid = cid
+        Log.i("STORING",sharedPreferences.cid.toString())*/
+
+    }
 
     override suspend fun apiInitialize(apiUrl : String, username : String, password : String) {
         handleKeyStorage()
@@ -88,64 +94,53 @@ class LoginViewModel(
         }
     }
 
-    override suspend fun createPatient(firstName: String, lastName : String) : Patient? {
+    override suspend fun createPatient(patient : Patient) : Patient? {
         try{
             val createdPatient = icureApi!!.patient.encryptAndCreate(
                 icureApi!!.patient.initialiseEncryptionMetadata(
-                    Patient(
-                        id = UUID.randomUUID().toString(),
-                        firstName = firstName,
-                        lastName = lastName,
-                        note = "Yeet"
-                    )
+                    patient
                 )
             )
             return createdPatient
-  /*          createdPatient?.let {
-                val retrievedPatient = icureApi!!.patient.getAndDecrypt(createdPatient.id)
-                patient = retrievedPatient
-                return retrievedPatient
-            }*/
+
         }catch (e : Exception){
             e.printStackTrace()
             updateDataStatus(DeviceDataStatus.ERROR)
             Log.i("Patient","Error while craeting a patient")
         }
-
-
         return null
     }
 
 
     override suspend fun createContact(patient : Patient) : Contact?{
         try{
+
             val createdContact = icureApi!!.contact.encryptAndCreate(
                 icureApi!!.contact.initialiseEncryptionMetadata(
                     Contact(
-                        id = cid,
+                        id = sharedPreferences.cid!!,
                         descr = "ASCASDFASDASDQWEQW",
                     ),
                     patient
                 )
             )
             return createdContact
-/*            createdContact?.let {
-                val retrievedContact = icureApi!!.contact.getAndDecrypt(createdContact.id)
-                contact = retrievedContact
-                return  retrievedContact
-            }*/
         }catch (e : Exception){
+            cid = defaultCryptoService.strongRandom.randomUUID()
+            sharedPreferences.cid = cid
             e.printStackTrace()
             Log.i("Contact","Error while creating contact")
         }
-
         return null
     }
 
     @OptIn(InternalIcureApi::class)
     override suspend fun getDeviceConfigData() {
         icureApi?.let {
-            val patient = createPatient("Jean","Jacques")
+
+            val patient = createPatient(
+                Patient(id = UUID.randomUUID().toString(), firstName = "Jean", lastName = "Jacques", note = "Yeet")
+            )
             if(patient == null){
                 Log.i("ICURE API","Couldn't get patient")
                 updateDataStatus(DeviceDataStatus.ERROR)
@@ -161,40 +156,46 @@ class LoginViewModel(
 
 
             createdContact.let {
-                symmetricKey = icureApi!!.contact.getEncryptionKeyOf(createdContact).s
+                symmetricKey = getContactSymmetricKey(createdContact)
+                /*symmetricKey = icureApi!!.contact.getEncryptionKeyOf(createdContact).s*/
                 val byteArrayKey = hexToByteArray(symmetricKey!!)
-                /*                var byteArrayKey : ByteArray? = null
-                symmetricKey?.let {
-                    byteArrayKey = hexToByteArray(symmetricKey!!)
-                    try {
-                        byteArrayKey?.let { KeyStoreManager.storeEncryptionKey(byteArrayKey!!) }
-                        val key = KeyStoreManager.getEncryptionKey()
-                        val hexString = key?.toHexString()
-                        println("immediate retreived stored key $hexString ")
-                        println("stored  $key")
-                    }catch (e : Exception){
-                        e.printStackTrace()
-                    }
-                }*/
+
 
                 /*Log.i("KEY", symmetricKey.toString())*/
                 symmetricKey?.let {
                     try {
                         val currentState = _uiState.value;
-                        val bluetoothConfigData = BluetoothConfigData(cid,userId!!,userPassword!!,byteArrayKey) // testKey!!
+                        val topic = context.getString(R.string.topic)
+                        // users configured a new device , a new cid has to be used
+                        val newCid = defaultCryptoService.strongRandom.randomUUID()
+                        sharedPreferences.cid = newCid
+
+                        val bluetoothConfigData = BluetoothConfigData(newCid,userId!!,userPassword!!,byteArrayKey,topic) // testKey!!
                         _uiState.value = currentState.copy(deviceConfigData = bluetoothConfigData,deviceDataStatus = DeviceDataStatus.READY)
                         Log.i("ICURE DATA CONFIG","Got device config data")
-                        testDecryption()
+                        Log.i("ICURE DATA CONFIG", sharedPreferences.cid.toString())
+                        /*testDecryption()*/
                     }catch (e : Exception){
                         updateDataStatus(DeviceDataStatus.ERROR)
                         Log.i("ICURE DATA CONFIG","Couldn't get device config data")
                     }
                 }
             }?:Log.i("ICURE API","Couldn't get contact ")
-        }
+        }?: Log.i("ICURE API", "Icure API not itialized")
     }
 
+    suspend fun getContactSymmetricKey(contact: Contact) : String?{
+        icureApi?.let{
+            return icureApi!!.contact.getEncryptionKeyOf(contact).s
+        }?: return null
 
+    }
+
+    suspend fun getContactById(contactId : String) : Contact?{
+        icureApi?.let{
+            return icureApi!!.contact.getAndDecrypt(contactId)
+        }?: return null
+    }
     fun updateDataStatus(status : DeviceDataStatus){
         val currentState = _uiState.value;
         _uiState.value = currentState.copy(deviceDataStatus = status)
@@ -218,7 +219,7 @@ class LoginViewModel(
 
 
 
-    override suspend fun testDecryption(){
+    suspend fun testDecryption(){
         icureApi?.let {
             try {
                 val retrievedContact1 = icureApi!!.contact.getAndDecrypt(cidToTestDecrypt)
@@ -233,7 +234,4 @@ class LoginViewModel(
         }
 
     }
-
-
-
 }

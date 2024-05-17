@@ -10,10 +10,10 @@ import javax.net.ssl.SSLSocketFactory
 interface IMqttController {
         val rtData : StateFlow<LiveSession>
         fun createSSLSocketFactory(oneWaySSL : Boolean = false): SSLSocketFactory?
-        fun getMqttClientOptions(useTLS : Boolean) : MqttConnectOptions
+        fun getMqttClientOptions() : MqttConnectOptions
 
         fun setupMqtt(deviceSymmetricKey: ByteArray)
-        fun createMqttClient(context: Context, brokerURL : String, clientId : String ) : MqttAndroidClient?
+        fun createMqttClient(context: Context, brokerURL : String, clientId : String, deviceSymmetricKey: ByteArray ) : MqttAndroidClient?
 
         fun connectBroker(mqttClient: MqttAndroidClient?,options : MqttConnectOptions)
         fun subscribe(topic: String, qos: Int = 1)

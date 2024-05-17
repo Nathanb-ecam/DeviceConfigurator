@@ -14,7 +14,7 @@ interface ILoginViewModel {
 
 
 
-    suspend fun createPatient(firstName: String, lastName : String) : Patient?
+    suspend fun createPatient(patient: Patient) : Patient?
 
 
     suspend fun createContact(patient : Patient) : Contact?
@@ -26,7 +26,4 @@ interface ILoginViewModel {
 
     suspend fun handleKeyStorage()
 
-
-
-    suspend fun testDecryption(){}
 }

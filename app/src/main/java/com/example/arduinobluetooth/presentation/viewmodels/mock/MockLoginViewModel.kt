@@ -23,7 +23,8 @@ class MockLoginViewModel : ILoginViewModel,ViewModel() {
                 "abdcef1234-abdcef1234",
                 "a34ef12cd-abdcef1234",
                 "password",
-                ByteArray(0)
+                ByteArray(0),
+                ""
             )
         )
     )
@@ -32,7 +33,7 @@ class MockLoginViewModel : ILoginViewModel,ViewModel() {
         Log.i("MOCK LOGIN","apiInitalize")
     }
 
-    override suspend fun createPatient(firstName: String, lastName: String): Patient? {
+    override suspend fun createPatient(patient : Patient): Patient? {
         Log.i("MOCK LOGIN","createpatient")
         return null
     }

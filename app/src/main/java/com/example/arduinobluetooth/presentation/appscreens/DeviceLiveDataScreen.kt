@@ -1,6 +1,7 @@
 package com.example.arduinobluetooth.presentation.appscreens
 
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 
@@ -41,9 +42,14 @@ import com.example.arduinobluetooth.presentation.uiComponents.iCureTextStyles
 
 import com.example.arduinobluetooth.presentation.viewmodels.LoginViewModel
 import com.example.arduinobluetooth.presentation.viewmodels.mock.MockLiveDataViewModel
+import com.example.arduinobluetooth.storage.MySharedPreferences
 import com.example.arduinobluetooth.ui.theme.ArduinoBluetoothTheme
 import com.icure.kryptom.utils.hexToByteArray
 import com.icure.kryptom.utils.toHexString
+import com.icure.sdk.model.Contact
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -57,10 +63,33 @@ fun DeviceLiveDataScreen(
     val liveData by liveDataViewModel.liveData.collectAsState()
     val context = LocalContext.current
 
+    val mySharedPreferences = MySharedPreferences(context)
+
 
 
     if(!liveData.connected){
-        liveDataViewModel.setupMqtt(loginState.deviceConfigData.key)
+        val cid = mySharedPreferences.cid
+        Log.i("SERIOUSLY",cid.toString())
+        if (cid != null){
+            LaunchedEffect(key1 = false) {
+                var contact : Contact? = null
+                try {
+                    contact = loginViewModel.getContactById(cid)
+                    contact?.let {
+                        val stringKey = loginViewModel.getContactSymmetricKey(contact)
+                        if(stringKey != null) {
+                            liveDataViewModel.setupMqtt(stringKey.toByteArray(Charsets.UTF_8))
+                        }
+
+                    }
+                }catch (e : Exception){
+                    e.printStackTrace()
+                }
+
+
+
+            }
+        }
     }
 
 
@@ -69,6 +98,7 @@ fun DeviceLiveDataScreen(
     DisposableEffect(Unit) {
         onDispose {
             liveDataViewModel.unsubscribe()
+            liveDataViewModel.closeMqttConnection()
         }
     }
 

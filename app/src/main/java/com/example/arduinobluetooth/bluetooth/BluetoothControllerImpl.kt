@@ -21,7 +21,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import java.util.UUID
 import com.example.arduinobluetooth.utils.Crypto
 import com.icure.kryptom.utils.toHexString
-
+import java.util.LinkedList
+import java.util.Queue
 
 
 @SuppressLint("MissingPermission")
@@ -34,6 +35,11 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
     private val _connectionState = MutableStateFlow(BluetoothState.INIT)
     override val connectionState : StateFlow<BluetoothState> get() = _connectionState
     private val _isScanning = MutableStateFlow(false)
+
+    // WRITING TO BLUETOOTH CHARACTERISTICS REQURES A QUEUE MECHANISM
+    data class WriteOperation(val characteristic: BluetoothGattCharacteristic, val data : ByteArray)
+    private val writeQueue: Queue<WriteOperation> = LinkedList()
+    private var isWriting = false
 
 
     private val handler = Handler(Looper.getMainLooper())
@@ -50,10 +56,15 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
         "senderUuid" to UUID.fromString(context.getString(R.string.senderUuid)),
         "senderTokenUuid" to UUID.fromString(context.getString(R.string.senderTokenUuid)),
         "encryptKeyUuid" to UUID.fromString(context.getString(R.string.encryptKeyUuid)),
+        "topicUuid" to UUID.fromString(context.getString(R.string.topicUuid)),
         "contactId" to UUID.fromString(context.getString(R.string.contactUuid)),
         "configStatusUuid" to UUID.fromString(context.getString(R.string.configStatusUid))
     )
 
+    companion object ble {
+        val TAG = "BluetoothControllerImpl"
+
+    }
 
 
     private val cryptoUtils  = Crypto()
@@ -72,7 +83,6 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
                 Toast.makeText(context, "Enable Bluetooth", Toast.LENGTH_SHORT).show()
                 return
             }
-
             try{
                 if(!_isScanning.value){
                     adapter.bluetoothLeScanner.startScan(leScanCallback)
@@ -90,14 +100,12 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
             Log.i("BTH","Bluetooth not enabled")
             return
         }
-
         try{
             if(_isScanning.value){
                 adapter.bluetoothLeScanner.stopScan(leScanCallback)
                 _isScanning.value = false
             }
             Log.i("After scan", " Found ${_scannedDevices.value.size} devices")
-
         }
         catch(e:Exception){
             Log.i("Exception",e.toString())
@@ -182,9 +190,14 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
         }
     }
 
+    fun configurationDeviceCompleted(){
+        // need to reset data if the patient wants to reconfigure another device without quitting the app
+        _connectionState.value = BluetoothState.CONFIGURED
 
 
-    // toggle arduino builtin Led to ensure we are communicating with the right device
+    }
+
+    // toggle arduino builtin Led to test connection with device
     override fun testDeviceConnection() {
         connectedGatt?.let { gatt ->
 
@@ -192,13 +205,30 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
             val testCharacteristic = arduinoService?.getCharacteristic(bleDeviceUuids.getValue("testUuid"))
 
             if (testCharacteristic != null) {
-                writeToCharacteristic(testCharacteristic,gatt,"1".toByteArray())
+                val data = "1".toByteArray()
+                writeToCharacteristic(gatt,WriteOperation(testCharacteristic,data))
             }
         }?: Log.i("Connected GATT","Not connected to a device")
     }
 
 
+    fun writeToCharacteristicWithQueue(characteristic: BluetoothGattCharacteristic, gatt: BluetoothGatt, data: ByteArray) {
+        writeQueue.add(WriteOperation(characteristic, data))
+        if (!isWriting) {
+            processNextWrite(gatt)
+        }
+    }
 
+    fun processNextWrite(gatt : BluetoothGatt){
+        val writeOperation = writeQueue.poll()
+        if(writeOperation != null){
+            isWriting = true
+            writeToCharacteristic(gatt,writeOperation)
+        }
+        configurationDeviceCompleted()
+
+
+    }
     override fun configureArduinoDevice(configData: BluetoothConfigData){
         connectedGatt?.let { gatt ->
 
@@ -208,20 +238,31 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
             val senderTokenCharacteristic = arduinoService?.getCharacteristic(bleDeviceUuids.getValue("senderTokenUuid"))
             val senderKeyCharacteristic = arduinoService?.getCharacteristic(bleDeviceUuids.getValue("encryptKeyUuid"))
             val contactIdCharacteristic = arduinoService?.getCharacteristic(bleDeviceUuids.getValue("contactId"))
+            val topicCharacteristic = arduinoService?.getCharacteristic(bleDeviceUuids.getValue("topicUuid"))
             //val statusCharacteristic = arduinoService?.getCharacteristic(configStatusUuid)
 
             val allDefined = listOf(
                     senderIdCharacteristic,
                     senderTokenCharacteristic,
                     senderKeyCharacteristic,
-                    contactIdCharacteristic
+                    contactIdCharacteristic,
+                    topicCharacteristic
                 )
-                .any { it != null }
+                .all { it != null }
 
 
             if(!allDefined){
                 Log.i("CONFIGURE", "Some characteristics are not defined")
                 return
+            }else{
+                Log.i(TAG, "Starting beautiful queue")
+                val contactId  = UUID.fromString(configData.cid)
+                val byteArray = cryptoUtils.uuid128ToByteArray(contactId)
+                writeToCharacteristicWithQueue(senderIdCharacteristic!!,gatt,configData.uid.toByteArray(Charsets.UTF_8))
+                writeToCharacteristicWithQueue(senderTokenCharacteristic!!,gatt,configData.password.toByteArray())
+                writeToCharacteristicWithQueue(contactIdCharacteristic!!,gatt,byteArray)
+                writeToCharacteristicWithQueue(topicCharacteristic!!,gatt,configData.topic.toByteArray(Charsets.UTF_8))
+                writeToCharacteristicWithQueue(senderKeyCharacteristic!!,gatt,configData.key)
             }
 
 /*            Handler(Looper.getMainLooper()).postDelayed({
@@ -238,56 +279,23 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
                 }
             }, 100)*/
 
-            if (contactIdCharacteristic != null) {
-                Handler(Looper.getMainLooper()).postDelayed({
-                    val contactId  = UUID.fromString(configData.cid)
-                    Log.i("SOLUTION","Cid : ${contactId}")
-                    val byteArray = cryptoUtils.uuid128ToByteArray(contactId)
-                    writeToCharacteristic(contactIdCharacteristic,gatt,byteArray)
-                }, 0)
-            }
 
-            if (senderIdCharacteristic!=null){
-                Handler(Looper.getMainLooper()).postDelayed({
-                    Log.i("SOLUTION","Username : ${configData.uid}")
-                    val byteArray = configData.uid.toByteArray(Charsets.UTF_8)
-                    /*val byteArray = "b93676@icure.com".toByteArray(Charsets.UTF_8)*/
-                    Log.i("SENDER UUID",byteArray.toString())
-                    writeToCharacteristic(senderIdCharacteristic,gatt,byteArray)
-                    Log.i("GATT", "Setting send name characteristic")
-                }, 200)
-            }
-
-            if (senderTokenCharacteristic != null) {
-                Handler(Looper.getMainLooper()).postDelayed({
-                    val senderToken  = UUID.fromString(configData.password)
-                    Log.i("SOLUTION","Token : ${configData.password}")
-                    val byteArray = cryptoUtils.uuid128ToByteArray(senderToken)
-                    writeToCharacteristic(senderTokenCharacteristic,gatt,byteArray)
-                }, 400)
-            }
-
-
-
-
-            if (senderKeyCharacteristic != null) {
-                Handler(Looper.getMainLooper()).postDelayed({
-                    val byteArrayKey = configData.key
-                    Log.i("SOLUTION","Key : ${byteArrayKey.toHexString()}")
-                    writeToCharacteristic(senderKeyCharacteristic,gatt,byteArrayKey)
-                    _connectionState.value = BluetoothState.CONFIGURED
-
-                }, 600)
-            }
         }?:Log.i("Connected GATT","Not connected to a device")
     }
 
 
 
-    fun writeToCharacteristic(characteristic: BluetoothGattCharacteristic, gatt: BluetoothGatt,byteArray: ByteArray){ //message: String
+
+
+    fun writeToCharacteristic(gatt: BluetoothGatt,wo : WriteOperation){ //message: String
+        val characteristic = wo.characteristic
         characteristic.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-        characteristic.setValue(byteArray)
-        gatt.writeCharacteristic(characteristic)
+        characteristic.setValue(wo.data)
+        val success = gatt.writeCharacteristic(characteristic)
+        if (!success) { // the initiation of the write operation failed, we can then set writing to false to reattempt
+            isWriting = false
+            processNextWrite(gatt)
+        }
     }
 
 
@@ -302,12 +310,9 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
         }
     }
 
-
-
     override fun disconnectDevice(){
         connectedGatt?.let{gatt->
             try{
-
                 gatt.disconnect()
                 Log.i("GATT Device","We forced Device disconnection")
 
@@ -404,7 +409,13 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
             _connectionState.value = BluetoothState.READY_TO_CONFIGURE
         }
 
-
+        override fun onCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {
+            super.onCharacteristicWrite(gatt, characteristic, status)
+            gatt?.let {
+                isWriting = false
+                processNextWrite(gatt)
+            }?: Log.d(TAG, "That's sad")
+        }
         override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic, value: ByteArray) {
             //super.onCharacteristicChanged(gatt, characteristic, value)
             Log.i("GATT UP","Updated value")
