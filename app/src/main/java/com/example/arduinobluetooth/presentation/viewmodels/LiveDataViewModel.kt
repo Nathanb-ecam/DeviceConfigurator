@@ -30,8 +30,8 @@ class LiveDataViewModel(
     )
 
 
-    override fun setupMqtt(deviceSymmetricKey: ByteArray) {
-        mqttController.setupMqtt(deviceSymmetricKey)
+    override fun setupMqtt(deviceSymmetricKey: ByteArray,topic : String) {
+        mqttController.setupMqtt(deviceSymmetricKey,topic)
     }
 
     override fun subscribe(){

@@ -58,7 +58,7 @@ class MqttController(val context: Context) : IMqttController {
 
     private val mqttUser = context.resources.getString(R.string.mqtt_username)
     private val mqttPassword = context.resources.getString(R.string.mqtt_password)
-    private val topic = context.resources.getString(R.string.topic)
+    /*private val topic = context.resources.getString(R.string.topic)*/
 
 
     private var options : MqttConnectOptions? = null
@@ -137,7 +137,7 @@ class MqttController(val context: Context) : IMqttController {
     }
 
 
-    override fun setupMqtt(deviceSymmetricKey: ByteArray){
+    override fun setupMqtt(deviceSymmetricKey: ByteArray, topic : String){
         //1 set the bluetooth config data (contains symmetric key to decrypt mqtt messages published by the IoT device)
         //2 Create client
         //3 connect client to broker
@@ -155,7 +155,7 @@ class MqttController(val context: Context) : IMqttController {
 
             }
             options?.let {
-                connectBroker(mqttClient,options!!)
+                connectBroker(mqttClient,options!!,topic)
             }
 
         }else{
@@ -168,7 +168,7 @@ class MqttController(val context: Context) : IMqttController {
 
 
 
-    override fun connectBroker(mqttClient: MqttAndroidClient?,options : MqttConnectOptions){
+    override fun connectBroker(mqttClient: MqttAndroidClient?,options : MqttConnectOptions, topic : String){
         try {
             mqttClient?.connect(options, null, object : IMqttActionListener {
                 override fun onSuccess(asyncActionToken: IMqttToken?) {

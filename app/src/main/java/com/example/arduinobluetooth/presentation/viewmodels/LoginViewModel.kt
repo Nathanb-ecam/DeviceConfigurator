@@ -62,6 +62,7 @@ class LoginViewModel(
 
 
     private var cid : String? = null
+    private var root_topic : String? = context.resources.getString(R.string.root_topic)
     private var userId : String? = null
     private var userPassword : String? = null
     private var symmetricKey : String? = null
@@ -130,6 +131,7 @@ class LoginViewModel(
         }catch (e : Exception){
             cid = defaultCryptoService.strongRandom.randomUUID()
             sharedPreferences.cid = cid
+            sharedPreferences.topic = root_topic + defaultCryptoService.strongRandom.randomUUID()
             e.printStackTrace()
             Log.i("Contact","Error while creating contact")
         }
@@ -138,6 +140,8 @@ class LoginViewModel(
 
     @OptIn(InternalIcureApi::class)
     override suspend fun getDeviceConfigData() {
+        // this function prepates all the necessary data to pass to the microcontroller
+
         icureApi?.let {
 
             val patient = createPatient(
@@ -150,8 +154,13 @@ class LoginViewModel(
             }
 
 
+
             val newCid = defaultCryptoService.strongRandom.randomUUID()
             sharedPreferences.cid = newCid
+
+            val newTopicUuid = defaultCryptoService.strongRandom.randomUUID()
+            sharedPreferences.topic = root_topic + newTopicUuid
+
             val createdContact = createContact(patient)
             if(createdContact == null){
                 Log.i("ICURE API","Couldn't create contact")
@@ -170,11 +179,11 @@ class LoginViewModel(
                 symmetricKey?.let {
                     try {
                         val currentState = _uiState.value;
-                        val topic = context.getString(R.string.topic)
+
                         // users configured a new device , a new cid has to be used
 
 
-                        val bluetoothConfigData = BluetoothConfigData(sharedPreferences.cid!!,userId!!,userPassword!!,byteArrayKey,topic) // testKey!!
+                        val bluetoothConfigData = BluetoothConfigData(sharedPreferences.cid!!,userId!!,userPassword!!,byteArrayKey,sharedPreferences.topic!!) // testKey!!
                         _uiState.value = currentState.copy(deviceConfigData = bluetoothConfigData,deviceDataStatus = DeviceDataStatus.READY)
                         Log.i("ICURE DATA CONFIG","Got device config data")
                         Log.i("ICURE DATA CONFIG", sharedPreferences.cid.toString())

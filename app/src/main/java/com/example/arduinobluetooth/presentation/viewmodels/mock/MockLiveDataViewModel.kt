@@ -37,7 +37,7 @@ class MockLiveDataViewModel : ILiveData {
     }
 
 
-    override fun setupMqtt(deviceSymmetricKey: ByteArray) {
+    override fun setupMqtt(deviceSymmetricKey: ByteArray, topic:String) {
         Log.i(TAG,"setup Mqtt")
     }
 

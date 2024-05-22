@@ -12,10 +12,10 @@ interface IMqttController {
         fun createSSLSocketFactory(oneWaySSL : Boolean = false): SSLSocketFactory?
         fun getMqttClientOptions() : MqttConnectOptions
 
-        fun setupMqtt(deviceSymmetricKey: ByteArray)
+        fun setupMqtt(deviceSymmetricKey: ByteArray,topic : String)
         fun createMqttClient(context: Context, brokerURL : String, clientId : String, deviceSymmetricKey: ByteArray ) : MqttAndroidClient?
 
-        fun connectBroker(mqttClient: MqttAndroidClient?,options : MqttConnectOptions)
+        fun connectBroker(mqttClient: MqttAndroidClient?,options : MqttConnectOptions, topic : String)
         fun subscribe(topic: String, qos: Int = 1)
 
         fun unsubscribe(topic : String)

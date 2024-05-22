@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 interface ILiveData {
     val liveData : StateFlow<LiveSession>
-    fun setupMqtt(deviceSymmetricKey: ByteArray)
+    fun setupMqtt(deviceSymmetricKey: ByteArray,topic : String)
 
     fun subscribe()
 
