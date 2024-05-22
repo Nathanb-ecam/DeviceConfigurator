@@ -378,13 +378,11 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
                     Log.i("CHAR","charcac device")
                     if(!bleDeviceUuids.containsValue(characteristic.uuid)) {
                         _connectionState.value = BluetoothState.UNKNOWN_DEVICE
-                        Log.i("YESSIR","unknown device, was missing characteristics")
                         return
                     }
                 }
             } else {
                 _connectionState.value = BluetoothState.UNKNOWN_DEVICE
-                Log.i("YESSIR","unknown device, deosnt even has the icure service")
                 return
             }
 

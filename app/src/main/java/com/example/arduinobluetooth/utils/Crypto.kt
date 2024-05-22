@@ -32,15 +32,11 @@ class Crypto {
     }
 
     fun hexStringToByteArray(hexString: String): ByteArray {
-        val result = ByteArray(hexString.length / 2)
-        for (i in hexString.indices step 2) {
-            val firstDigit = Character.digit(hexString[i], 16)
-            val secondDigit = Character.digit(hexString[i + 1], 16)
-            val byteValue = (firstDigit shl 4) + secondDigit
-            result[i / 2] = byteValue.toByte()
-        }
-        return result
+        return hexString.chunked(2)
+            .map { it.toInt(16).toByte() }
+            .toByteArray()
     }
+
 
 
 

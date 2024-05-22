@@ -69,7 +69,7 @@ fun DeviceLiveDataScreen(
 
     if(!liveData.connected){
         val cid = mySharedPreferences.cid
-        Log.i("SERIOUSLY",cid.toString())
+        Log.i("REMEMBERED CID",cid.toString())
         if (cid != null){
             LaunchedEffect(key1 = false) {
                 var contact : Contact? = null
@@ -77,10 +77,10 @@ fun DeviceLiveDataScreen(
                     contact = loginViewModel.getContactById(cid)
                     contact?.let {
                         val stringKey = loginViewModel.getContactSymmetricKey(contact)
-                        if(stringKey != null) {
-                            liveDataViewModel.setupMqtt(stringKey.toByteArray(Charsets.UTF_8))
+                        stringKey?.let {
+                            val byteArrayKey = hexToByteArray(stringKey)
+                            liveDataViewModel.setupMqtt(byteArrayKey)
                         }
-
                     }
                 }catch (e : Exception){
                     e.printStackTrace()

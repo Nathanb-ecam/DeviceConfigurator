@@ -115,8 +115,10 @@ class LoginViewModel(
     override suspend fun createContact(patient : Patient) : Contact?{
         try{
 
+            Log.i("ICURE DATA CONFIG, cid", sharedPreferences.cid!!)
             val createdContact = icureApi!!.contact.encryptAndCreate(
                 icureApi!!.contact.initialiseEncryptionMetadata(
+
                     Contact(
                         id = sharedPreferences.cid!!,
                         descr = "ASCASDFASDASDQWEQW",
@@ -147,6 +149,9 @@ class LoginViewModel(
                 return
             }
 
+
+            val newCid = defaultCryptoService.strongRandom.randomUUID()
+            sharedPreferences.cid = newCid
             val createdContact = createContact(patient)
             if(createdContact == null){
                 Log.i("ICURE API","Couldn't create contact")
@@ -167,14 +172,13 @@ class LoginViewModel(
                         val currentState = _uiState.value;
                         val topic = context.getString(R.string.topic)
                         // users configured a new device , a new cid has to be used
-                        val newCid = defaultCryptoService.strongRandom.randomUUID()
-                        sharedPreferences.cid = newCid
 
-                        val bluetoothConfigData = BluetoothConfigData(newCid,userId!!,userPassword!!,byteArrayKey,topic) // testKey!!
+
+                        val bluetoothConfigData = BluetoothConfigData(sharedPreferences.cid!!,userId!!,userPassword!!,byteArrayKey,topic) // testKey!!
                         _uiState.value = currentState.copy(deviceConfigData = bluetoothConfigData,deviceDataStatus = DeviceDataStatus.READY)
                         Log.i("ICURE DATA CONFIG","Got device config data")
                         Log.i("ICURE DATA CONFIG", sharedPreferences.cid.toString())
-                        /*testDecryption()*/
+                        testDecryption()
                     }catch (e : Exception){
                         updateDataStatus(DeviceDataStatus.ERROR)
                         Log.i("ICURE DATA CONFIG","Couldn't get device config data")
