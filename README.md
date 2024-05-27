@@ -5,5 +5,5 @@ The apps allows to setup an iCure IoT device by sending the necessary fields via
 Listens to the live messages of the latest configured device (storing cid and topic in sharedPreferences)
 
 ## problems
-Currently, the cid is stored in SharedPreferences
+Currently, the cid is stored in SharedPreferences<br/>
 The are bugs when attempting to configure two devices in a row (without restarting the app)
