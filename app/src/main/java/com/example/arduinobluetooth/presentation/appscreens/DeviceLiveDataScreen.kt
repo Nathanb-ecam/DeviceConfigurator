@@ -77,7 +77,7 @@ fun DeviceLiveDataScreen(
                 var contact : Contact? = null
                 try {
                     contact = loginViewModel.getContactById(cid)
-                    contact?.let {
+                    contact.let {
                         val stringKey = loginViewModel.getContactSymmetricKey(contact)
                         stringKey?.let {
                             val byteArrayKey = hexToByteArray(stringKey)

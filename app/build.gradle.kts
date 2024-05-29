@@ -65,8 +65,9 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material:1.5.4")
 
-    implementation("com.icure:icure-sdk:0.0.3")
-    implementation("com.icure:kryptom:0.0.3")
+    implementation("com.icure:icure-sdk-android:0.2.17")
+
+
 
     implementation("org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5")
     implementation("org.eclipse.paho:org.eclipse.paho.android.service:1.1.1")

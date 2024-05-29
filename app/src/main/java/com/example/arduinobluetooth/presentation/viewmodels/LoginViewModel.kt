@@ -1,7 +1,7 @@
 package com.example.arduinobluetooth.presentation.viewmodels
 
+
 import android.content.Context
-import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.arduinobluetooth.R
@@ -11,12 +11,14 @@ import com.example.arduinobluetooth.storage.MySharedPreferences
 import com.icure.kryptom.crypto.RsaAlgorithm
 import com.icure.kryptom.crypto.defaultCryptoService
 import com.icure.kryptom.utils.hexToByteArray
-import com.icure.kryptom.utils.toHexString
-import com.icure.sdk.api.IcureApi
+import com.icure.sdk.IcureSdk
+import com.icure.sdk.api.AuthenticationMethod
 import com.icure.sdk.auth.UsernamePassword
-
-import com.icure.sdk.model.Patient
+import com.icure.sdk.crypto.impl.BasicCryptoStrategies
 import com.icure.sdk.model.Contact
+import com.icure.sdk.model.DecryptedContact
+import com.icure.sdk.model.DecryptedPatient
+import com.icure.sdk.model.Patient
 import com.icure.sdk.storage.IcureStorageFacade
 import com.icure.sdk.storage.impl.DefaultStorageEntryKeysFactory
 import com.icure.sdk.storage.impl.JsonAndBase64KeyStorage
@@ -25,8 +27,6 @@ import com.icure.sdk.utils.InternalIcureApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-
-
 import java.util.UUID
 
 
@@ -54,7 +54,7 @@ class LoginViewModel(
 
     private var privateKey =context.getString(R.string.privkey)
 
-    private var icureApi : IcureApi? = null
+    private lateinit var api : IcureSdk
     private var storage = VolatileStorageFacade()
     private var dataOwnerId = context.getString(R.string.dataOwnerId)
     private var cidToTestDecrypt = context.getString(R.string.cidToTestDecrypt)
@@ -82,24 +82,30 @@ class LoginViewModel(
         userId = username
         userPassword = password
         try {
-            icureApi = IcureApi.initialise(
+            api = IcureSdk.initialise(
                 apiUrl,
-                UsernamePassword(username, password),
-                storage
+                AuthenticationMethod.UsingCredentials(UsernamePassword(username, password)),
+                storage,
+                BasicCryptoStrategies,
             )
             val currentState =_uiState.value
             _uiState.value = currentState.copy(apiInitalized = true)
+            testDecryption()
             Log.i("ICURE API INIT", "Api successfuly initalized")
         }catch(e : Exception){
             Log.i("ICURE API INIT",e.toString())
         }
     }
 
-    override suspend fun createPatient(patient : Patient) : Patient? {
+    override suspend fun createPatient(patient : DecryptedPatient) : DecryptedPatient? {
         try{
-            val createdPatient = icureApi!!.patient.encryptAndCreate(
-                icureApi!!.patient.initialiseEncryptionMetadata(
-                    patient
+            val user = api.user.getCurrentUser()
+            val createdPatient = api.patient.createPatient(
+
+                api.patient.withEncryptionMetadata(
+                    patient,
+                    user
+
                 )
             )
             return createdPatient
@@ -113,18 +119,20 @@ class LoginViewModel(
     }
 
 
-    override suspend fun createContact(patient : Patient) : Contact?{
+    override suspend fun createContact(patient : DecryptedPatient) : DecryptedContact?{
         try{
 
             Log.i("ICURE DATA CONFIG, cid", sharedPreferences.cid!!)
-            val createdContact = icureApi!!.contact.encryptAndCreate(
-                icureApi!!.contact.initialiseEncryptionMetadata(
+            val user = api.user.getCurrentUser()
+            val createdContact = api.contact.createContact(
+                api.contact.withEncryptionMetadata(
 
-                    Contact(
+                    DecryptedContact(
                         id = sharedPreferences.cid!!,
                         descr = "ASCASDFASDASDQWEQW",
                     ),
-                    patient
+                    patient,
+                    user
                 )
             )
             return createdContact
@@ -138,14 +146,14 @@ class LoginViewModel(
         return null
     }
 
-    @OptIn(InternalIcureApi::class)
+
     override suspend fun getDeviceConfigData() {
         // this function prepates all the necessary data to pass to the microcontroller
 
-        icureApi?.let {
+
 
             val patient = createPatient(
-                Patient(id = UUID.randomUUID().toString(), firstName = "Jean", lastName = "Jacques", note = "Yeet")
+                DecryptedPatient(id = UUID.randomUUID().toString(), firstName = "Jean", lastName = "Jacques", note = "Yeet")
             )
             if(patient == null){
                 Log.i("ICURE API","Couldn't get patient")
@@ -171,7 +179,7 @@ class LoginViewModel(
 
             createdContact.let {
                 symmetricKey = getContactSymmetricKey(createdContact)
-                /*symmetricKey = icureApi!!.contact.getEncryptionKeyOf(createdContact).s*/
+                /*symmetricKey = IcureSdk!!.contact.getEncryptionKeyOf(createdContact).s*/
                 val byteArrayKey = hexToByteArray(symmetricKey!!)
 
 
@@ -187,32 +195,32 @@ class LoginViewModel(
                         _uiState.value = currentState.copy(deviceConfigData = bluetoothConfigData,deviceDataStatus = DeviceDataStatus.READY)
                         Log.i("ICURE DATA CONFIG","Got device config data")
                         Log.i("ICURE DATA CONFIG", sharedPreferences.cid.toString())
-                        testDecryption()
+
                     }catch (e : Exception){
                         updateDataStatus(DeviceDataStatus.ERROR)
                         Log.i("ICURE DATA CONFIG","Couldn't get device config data")
                     }
-                }
+                }?: Log.i("ICURE API", "Couldn't retreive symmetric key")
             }?:Log.i("ICURE API","Couldn't get contact ")
-        }?: Log.i("ICURE API", "Icure API not itialized")
     }
 
-    suspend fun getContactSymmetricKey(contact: Contact) : String?{
-        icureApi?.let{
-            return icureApi!!.contact.getEncryptionKeyOf(contact).s
-        }?: return null
+
+    suspend fun getContactSymmetricKey(contact: DecryptedContact) : String?{
+        return api.contact.getEncryptionKeysOf(contact).firstOrNull()?.s
+
+
 
     }
 
-    suspend fun getContactById(contactId : String) : Contact?{
-        icureApi?.let{
-            return icureApi!!.contact.getAndDecrypt(contactId)
-        }?: return null
+    suspend fun getContactById(contactId : String) : DecryptedContact{
+        return api.contact.getContact(contactId)
+
     }
     fun updateDataStatus(status : DeviceDataStatus){
         val currentState = _uiState.value;
         _uiState.value = currentState.copy(deviceDataStatus = status)
     }
+
 
     @OptIn(InternalIcureApi::class)
     override suspend fun handleKeyStorage(){
@@ -233,18 +241,17 @@ class LoginViewModel(
 
 
     suspend fun testDecryption(){
-        icureApi?.let {
-            try {
-                val retrievedContact1 = icureApi!!.contact.getAndDecrypt(cidToTestDecrypt)
+        try {
+            val retrievedContact1 = api.contact.getContact(cidToTestDecrypt)
 
-                Log.i("Test Decryption",retrievedContact1.toString())
+            Log.i("Test Decryption",retrievedContact1.toString())
 
-            }catch (e : Exception){
-                e.printStackTrace()
-                Log.i("Test Decryption",e.toString())
-            }
-
+        }catch (e : Exception){
+            e.printStackTrace()
+            Log.i("Test Decryption",e.toString())
         }
 
     }
+
+
 }

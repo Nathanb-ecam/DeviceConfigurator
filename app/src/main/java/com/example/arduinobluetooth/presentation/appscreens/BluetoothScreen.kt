@@ -74,7 +74,6 @@ fun BluetoothScreen(
     val searchText by blueViewModel.searchText.collectAsState()
 
     blueViewModel.startScan(context = context)
-    blueViewModel.disconnectCurrentDevice()
 
 
 
@@ -82,9 +81,10 @@ fun BluetoothScreen(
 
 
 
-    if(searchText.isNotEmpty()){
-        blueViewModel.stopScan(context = context)
-    }
+
+    //if(searchText.isNotEmpty()){
+    //    blueViewModel.stopScan(context = context)
+    //}
 
 
     Column(

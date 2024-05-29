@@ -7,6 +7,8 @@ import com.example.arduinobluetooth.login.ILoginViewModel
 import com.example.arduinobluetooth.presentation.viewmodels.DeviceDataStatus
 import com.example.arduinobluetooth.presentation.viewmodels.LoginUIState
 import com.icure.sdk.model.Contact
+import com.icure.sdk.model.DecryptedContact
+import com.icure.sdk.model.DecryptedPatient
 import com.icure.sdk.model.Patient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -33,12 +35,12 @@ class MockLoginViewModel : ILoginViewModel,ViewModel() {
         Log.i("MOCK LOGIN","apiInitalize")
     }
 
-    override suspend fun createPatient(patient : Patient): Patient? {
+    override suspend fun createPatient(patient : DecryptedPatient): DecryptedPatient? {
         Log.i("MOCK LOGIN","createpatient")
         return null
     }
 
-    override suspend fun createContact(patient: Patient): Contact? {
+    override suspend fun createContact(patient: DecryptedPatient): DecryptedContact? {
         Log.i("MOCK LOGIN","createContact")
         return null
     }

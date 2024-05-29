@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.util.UUID
 import com.example.arduinobluetooth.utils.Crypto
-import com.icure.kryptom.utils.toHexString
 import java.util.LinkedList
 import java.util.Queue
 
@@ -334,8 +333,8 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
                     connectedGatt = gatt
                     gatt?.discoverServices()
                     Log.i("STATE","Connected")
-                    stopScanLeDevice(context = context)
                     _connectionState.value = BluetoothState.CONNECTED
+                    stopScanLeDevice(context = context)
 
                 }
                 BluetoothProfile.STATE_DISCONNECTED -> {
@@ -403,8 +402,10 @@ class BluetoothControllerImpl(private val context : Context) : IBluetoothControl
             } else {
                 Log.e("Bluetooth", "Descriptor not found for CCCD UUID")
             }*/
-            Log.i("YESSIR","this should not be printed if unknwon device")
+
             _connectionState.value = BluetoothState.READY_TO_CONFIGURE
+
+
         }
 
         override fun onCharacteristicWrite(gatt: BluetoothGatt?, characteristic: BluetoothGattCharacteristic?, status: Int) {

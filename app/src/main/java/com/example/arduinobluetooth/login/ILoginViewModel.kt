@@ -2,6 +2,8 @@ package com.example.arduinobluetooth.login
 
 import com.example.arduinobluetooth.presentation.viewmodels.LoginUIState
 import com.icure.sdk.model.Contact
+import com.icure.sdk.model.DecryptedContact
+import com.icure.sdk.model.DecryptedPatient
 import com.icure.sdk.model.Patient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -14,10 +16,10 @@ interface ILoginViewModel {
 
 
 
-    suspend fun createPatient(patient: Patient) : Patient?
+    suspend fun createPatient(patient: DecryptedPatient) : DecryptedPatient?
 
 
-    suspend fun createContact(patient : Patient) : Contact?
+    suspend fun createContact(patient : DecryptedPatient) : DecryptedContact?
 
 
     suspend fun getDeviceConfigData()

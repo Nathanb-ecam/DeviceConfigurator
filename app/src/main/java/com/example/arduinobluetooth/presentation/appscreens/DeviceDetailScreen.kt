@@ -1,4 +1,4 @@
-package com.example.arduinobluetooth.presentation.appscreens
+ package com.example.arduinobluetooth.presentation.appscreens
 
 
 
@@ -28,6 +28,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.arduinobluetooth.R
 import com.example.arduinobluetooth.presentation.Screen
 import com.example.arduinobluetooth.bluetooth.BluetoothConfigData
+import com.example.arduinobluetooth.bluetooth.BluetoothControllerImpl
 import com.example.arduinobluetooth.bluetooth.MockBluetoothController
 import com.example.arduinobluetooth.bluetooth.MyBluetoothDevice
 
@@ -58,7 +59,7 @@ fun DeviceDetailScreen(
     val connectionState by blueViewModel.connectionState.collectAsState()
     val loginUIState = loginViewModel.uiState.collectAsState()
 
-    val delayBeforeStopConnecting = 10000L
+    val delayBeforeStopConnecting = 20000L
 
 
 

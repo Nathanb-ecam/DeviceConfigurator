@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<resources>
+    ~/Documents/iCure/code/icure_device/icure-device-esp32
+    <string name="app_name">ArduinoBluetooth</string>
+
+    <!--ICURE API-->
+    <string name="iCureUserId">18092@icure.com </string>
+    <string name="iCureUserPassword">EcamInternPassword</string>
+    <string name="kraken_cloud_url">http://192.168.63.51:16043</string>
+    <!--<string name="kraken_cloud_url">http://192.168.1.46:16043</string>-->
+
+    <!--IOT BROKER-->
+    <string name="broker_DN">buchinn.be</string>
+    <string name="broker_url">ssl://buchinn.be:8883</string>
+    <string name="useTLS">true</string> <!--broker_url port 1883 if useTLS false-->
+    <string name="mqtt_username">androidConfigApp</string>
+    <string name="mqtt_password">8fde8633-5273-4937-a3e9-81878afe309c</string>
+    <string name="root_topic">EU/BE/dev/</string>
+
+
+    <!--ICURE HEATLHCAREPARTY GCP -->
+    <string name="dataOwnerId">282db19f-4aaf-4d1c-b8fe-ad8e6377e320</string>
+    <string name="privkey">308204bf020100300d06092a864886f70d0101010500048204a9308204a50201000282010100c4ab3cfa9f889995902ad38a9fabb91d732f0e76f2621b40059f8c7eed2386821342d95f92a72c6e729921735d06ad42243d233e685ef70bd539b3a3fcd8447e6c2d0be57915a2fefd28a04bf1790ad5d880204833d4ed9f34296524f4d6a46185593ed716b8a70e4c825d335b43e91cf895c6af9ecc2f2176863b4218fc99a94d7f5e20450f5f9fcc541545cd0f2fa6be78f6812c488099dd1950810c5f7c7daabfc2b76fa5189557955db28377172b9384144be78090983ee701b2e8cef295c037ac0c5d790d46c6913309e645739753f89f544eaaff36b969803b4926a6929d6aa6c2fb9010d1a852def2a3ba275c565259db44c0962da1dda8a1e6fcd5b30203010001028201000d2f339fd3991b3eb912fdea81a8c7f8aef39d23213dad78fdc783ea30689cc854953b305a8b05820401bb09da572bbf4ee1a05ebb2d7e9f56f48ed3f40be58f9a1decf9bdc3d3110814b4a652b25c2518e60204052185aa921b2252376dba486561a5c2529e1f68e87d26d55e0d6fefc6c477b4e74ee5ebf6dfa9d2550d7e198ad8f37c79c3a537236d9e3eca3c4f3570e4697a7e9f1076f1bd8f84a58668253e059a2416d3daf864671c32b704ddace64d36c9be3db614c23681b0e6d92337cbcac20b4d3bad04fc043c04d0d9c5cdc5e5c7b94a5f2455c898dc90adaac80f29dbcf985a622b4b584c5beb6b34da909c337777566407a25e0f9dce969ff46102818100eef9a570133a516bf04e4f829c4d5256c0d339c51836ca759ad312b175deaa0e8d28b76166cca4984d35fc03b1cb6eced23cf0ab71269af9cd4320e6c067719053fd6f42308d9122f257a2420e80f988ca2d6baa87096ae22adb7843397cafe94b0383c504b4aee2204ed7fab61865cb56d257ba3175af9f6b46366ceb54385302818100d2ae05fc21dc1b69b0cd4d01f2336e8f4b01b1073cf845c580da9391b47325f3cf9b857bcb427443ee498deb1d17f76322fc8d10a7cb5bf068e26f2e30f7a7a81b2c7776485d87948bd072bd98655fe44fba08eb69bc842a510b6a081242599a7f5ba91d7d0bf0411263dd7ea2e32cd6f658f5868ea7486c24eff6769149c1210281810087c9f4f66d068b3371159e5a51e421b047dafe0d7f47cadcee7f97349d0c4bc6fef0aedabaa5f7b4ced2a90394684aeb5c4ce25818705e49291846beb77f4fe939c05d12d831e8d159b0eff2e6f8e45194c820508270987a30ee0a34f09a67fe80f05b547ceb0a20554957b20efc680315af69c7d3c8d2651c7885fe77eda01f0281810091f8c16cd08910f549eaf55043e01eda69bde24a819403c3b463bd9b56cbf19fdc58854420b10a9d869cb018173063d7ec85cfb79a8aec48c6631d6583c8140205d1e973aaf022e0697f2400f97643da8ce2f90b2357dabaf72c516b063bb299b96468e8659bbffb56229b7502a7248a4c6596b8845ea36f4aa878bbee2e8c0102818100935bdf248f224aa65b318b1184484eed5be9fb4c110c65f1c7dd94f70c723a7a86d9e6309f32a6039b47c8e80666de66ca994b53ea563703e6ab9dc497539d7b80f82636532a0c1e0e8124329bae51748b22d4d2909cc6209e700008f19231cddaabd18cbad4ab75814afac41bc98e71111b15cd89535e111b9d4e7374af78bb</string>
+    <string name="cidToTestDecrypt">77ba55e6-0ee5-477f-9e15-0e30ab1a3ea8</string>
+
+
+
+
+    <!--BLE CHARACTERISTICS -->
+    <string name="serviceUuid">b1be5923-8ca2-415c-9f20-69023f8b4c33</string>
+    <string name="senderUuid">3dbd6a55-fcc7-4cd8-811f-2c5754296a0a</string>
+    <string name="senderTokenUuid">0fd7161a-c2e2-44cb-a5ee-9dd3187424fc</string>
+    <string name="encryptKeyUuid">7626adb2-28ab-4327-8ead-bb571cb1d7f0</string>
+    <string name="contactUuid">477f3318-3a09-4c09-8273-bfb28163b7fd</string>
+    <string name="configStatusUid">5fae4e14-ca8f-41d7-bd5b-c3a0498973ae</string>
+    <string name="topicUuid">012797b1-152b-4148-92a4-d14e1ee896dc</string>
+    <string name="testUuid">8bbc0c8b-d41b-4fd3-8854-af19317d62a1</string>
+
+</resources>
